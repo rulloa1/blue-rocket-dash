@@ -298,6 +298,180 @@ export type Database = {
         }
         Relationships: []
       }
+      proposal_line_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          proposal_id: string
+          quantity: number
+          sort_order: number
+          total: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          proposal_id: string
+          quantity?: number
+          sort_order?: number
+          total?: number
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          proposal_id?: string
+          quantity?: number
+          sort_order?: number
+          total?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_line_items_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proposal_templates: {
+        Row: {
+          created_at: string
+          default_services: Json | null
+          default_terms: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          default_services?: Json | null
+          default_terms?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          default_services?: Json | null
+          default_terms?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      proposals: {
+        Row: {
+          client_business: string | null
+          client_email: string | null
+          client_name: string
+          created_at: string
+          deal_id: string | null
+          delivery_date: string | null
+          discount_type: string | null
+          discount_value: number | null
+          expires_at: string | null
+          id: string
+          lead_id: string | null
+          notes: string | null
+          public_id: string | null
+          sent_at: string | null
+          signed_at: string | null
+          status: Database["public"]["Enums"]["proposal_status"]
+          subtotal: number
+          template_id: string | null
+          terms: string | null
+          total: number
+          updated_at: string
+          user_id: string
+          viewed_at: string | null
+        }
+        Insert: {
+          client_business?: string | null
+          client_email?: string | null
+          client_name: string
+          created_at?: string
+          deal_id?: string | null
+          delivery_date?: string | null
+          discount_type?: string | null
+          discount_value?: number | null
+          expires_at?: string | null
+          id?: string
+          lead_id?: string | null
+          notes?: string | null
+          public_id?: string | null
+          sent_at?: string | null
+          signed_at?: string | null
+          status?: Database["public"]["Enums"]["proposal_status"]
+          subtotal?: number
+          template_id?: string | null
+          terms?: string | null
+          total?: number
+          updated_at?: string
+          user_id: string
+          viewed_at?: string | null
+        }
+        Update: {
+          client_business?: string | null
+          client_email?: string | null
+          client_name?: string
+          created_at?: string
+          deal_id?: string | null
+          delivery_date?: string | null
+          discount_type?: string | null
+          discount_value?: number | null
+          expires_at?: string | null
+          id?: string
+          lead_id?: string | null
+          notes?: string | null
+          public_id?: string | null
+          sent_at?: string | null
+          signed_at?: string | null
+          status?: Database["public"]["Enums"]["proposal_status"]
+          subtotal?: number
+          template_id?: string | null
+          terms?: string | null
+          total?: number
+          updated_at?: string
+          user_id?: string
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposals_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposals_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposals_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "proposal_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sequence_enrollments: {
         Row: {
           completed_at: string | null
@@ -436,6 +610,7 @@ export type Database = {
         | "bounced"
         | "replied"
       lead_status: "new" | "contacted" | "qualified" | "not_interested"
+      proposal_status: "draft" | "sent" | "viewed" | "signed" | "expired"
       sequence_status: "draft" | "active" | "paused"
     }
     CompositeTypes: {
@@ -580,6 +755,7 @@ export const Constants = {
         "replied",
       ],
       lead_status: ["new", "contacted", "qualified", "not_interested"],
+      proposal_status: ["draft", "sent", "viewed", "signed", "expired"],
       sequence_status: ["draft", "active", "paused"],
     },
   },
