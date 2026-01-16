@@ -588,12 +588,180 @@ export type Database = {
         }
         Relationships: []
       }
+      team_invites: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          expires_at: string | null
+          id: string
+          invited_by: string
+          role: string
+          token: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string | null
+          id?: string
+          invited_by: string
+          role: string
+          token?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string | null
+          id?: string
+          invited_by?: string
+          role?: string
+          token?: string | null
+        }
+        Relationships: []
+      }
+      team_members: {
+        Row: {
+          created_at: string
+          id: string
+          member_id: string
+          owner_id: string
+          role: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          member_id: string
+          owner_id: string
+          role: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          member_id?: string
+          owner_id?: string
+          role?: string
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          business_address: string | null
+          company_logo_url: string | null
+          company_name: string | null
+          contact_email: string | null
+          created_at: string
+          email_notifications: boolean | null
+          email_signature: string | null
+          id: string
+          inbound_webhook_token: string | null
+          notify_deal_stage_change: boolean | null
+          notify_lead_status_change: boolean | null
+          notify_new_lead: boolean | null
+          notify_proposal_signed: boolean | null
+          notify_proposal_viewed: boolean | null
+          smtp_from_email: string | null
+          smtp_host: string | null
+          smtp_password: string | null
+          smtp_port: number | null
+          smtp_username: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_address?: string | null
+          company_logo_url?: string | null
+          company_name?: string | null
+          contact_email?: string | null
+          created_at?: string
+          email_notifications?: boolean | null
+          email_signature?: string | null
+          id?: string
+          inbound_webhook_token?: string | null
+          notify_deal_stage_change?: boolean | null
+          notify_lead_status_change?: boolean | null
+          notify_new_lead?: boolean | null
+          notify_proposal_signed?: boolean | null
+          notify_proposal_viewed?: boolean | null
+          smtp_from_email?: string | null
+          smtp_host?: string | null
+          smtp_password?: string | null
+          smtp_port?: number | null
+          smtp_username?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_address?: string | null
+          company_logo_url?: string | null
+          company_name?: string | null
+          contact_email?: string | null
+          created_at?: string
+          email_notifications?: boolean | null
+          email_signature?: string | null
+          id?: string
+          inbound_webhook_token?: string | null
+          notify_deal_stage_change?: boolean | null
+          notify_lead_status_change?: boolean | null
+          notify_new_lead?: boolean | null
+          notify_proposal_signed?: boolean | null
+          notify_proposal_viewed?: boolean | null
+          smtp_from_email?: string | null
+          smtp_host?: string | null
+          smtp_password?: string | null
+          smtp_port?: number | null
+          smtp_username?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      webhooks: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          last_status_code: number | null
+          last_triggered_at: string | null
+          name: string
+          trigger_event: string
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          last_status_code?: number | null
+          last_triggered_at?: string | null
+          name: string
+          trigger_event: string
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          last_status_code?: number | null
+          last_triggered_at?: string | null
+          name?: string
+          trigger_event?: string
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      ensure_user_settings: { Args: never; Returns: string }
     }
     Enums: {
       deal_stage:
