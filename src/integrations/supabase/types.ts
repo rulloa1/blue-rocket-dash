@@ -14,6 +14,100 @@ export type Database = {
   }
   public: {
     Tables: {
+      deal_stage_history: {
+        Row: {
+          deal_id: string
+          entered_at: string
+          id: string
+          notes: string | null
+          stage: Database["public"]["Enums"]["deal_stage"]
+        }
+        Insert: {
+          deal_id: string
+          entered_at?: string
+          id?: string
+          notes?: string | null
+          stage: Database["public"]["Enums"]["deal_stage"]
+        }
+        Update: {
+          deal_id?: string
+          entered_at?: string
+          id?: string
+          notes?: string | null
+          stage?: Database["public"]["Enums"]["deal_stage"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_stage_history_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deals: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          id: string
+          lead_id: string | null
+          next_action: string | null
+          next_action_date: string | null
+          notes: string | null
+          proposal_url: string | null
+          services: string[] | null
+          stage: Database["public"]["Enums"]["deal_stage"]
+          stage_entered_at: string
+          title: string
+          updated_at: string
+          user_id: string
+          value: number
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          next_action?: string | null
+          next_action_date?: string | null
+          notes?: string | null
+          proposal_url?: string | null
+          services?: string[] | null
+          stage?: Database["public"]["Enums"]["deal_stage"]
+          stage_entered_at?: string
+          title: string
+          updated_at?: string
+          user_id: string
+          value?: number
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          next_action?: string | null
+          next_action_date?: string | null
+          notes?: string | null
+          proposal_url?: string | null
+          services?: string[] | null
+          stage?: Database["public"]["Enums"]["deal_stage"]
+          stage_entered_at?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deals_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_templates: {
         Row: {
           body: string
@@ -328,6 +422,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      deal_stage:
+        | "lead"
+        | "proposal_sent"
+        | "negotiation"
+        | "contract_signed"
+        | "onboarding"
+        | "active_client"
       enrollment_status:
         | "active"
         | "paused"
@@ -463,6 +564,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      deal_stage: [
+        "lead",
+        "proposal_sent",
+        "negotiation",
+        "contract_signed",
+        "onboarding",
+        "active_client",
+      ],
       enrollment_status: [
         "active",
         "paused",
