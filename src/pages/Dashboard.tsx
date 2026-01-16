@@ -3,39 +3,35 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
 import { QuickActions } from '@/components/dashboard/QuickActions';
-
-const stats = [
-  {
-    title: 'Total Leads',
-    value: '2,847',
-    change: '+12.5% from last month',
-    changeType: 'positive' as const,
-    icon: Users,
-  },
-  {
-    title: 'Qualified Leads',
-    value: '483',
-    change: '+8.2% from last month',
-    changeType: 'positive' as const,
-    icon: UserCheck,
-  },
-  {
-    title: 'Proposals Sent',
-    value: '127',
-    change: '+23.1% from last month',
-    changeType: 'positive' as const,
-    icon: FileText,
-  },
-  {
-    title: 'Active Clients',
-    value: '64',
-    change: '+4 new this month',
-    changeType: 'positive' as const,
-    icon: Building2,
-  },
-];
+import { useDashboardStats } from '@/hooks/useDashboardStats';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Dashboard() {
+  const { data: stats, isLoading } = useDashboardStats();
+
+  const statCards = [
+    {
+      title: 'Total Leads',
+      value: stats?.totalLeads ?? 0,
+      icon: Users,
+    },
+    {
+      title: 'Qualified Leads',
+      value: stats?.qualifiedLeads ?? 0,
+      icon: UserCheck,
+    },
+    {
+      title: 'Proposals Sent',
+      value: stats?.proposalsSent ?? 0,
+      icon: FileText,
+    },
+    {
+      title: 'Active Clients',
+      value: stats?.activeClients ?? 0,
+      icon: Building2,
+    },
+  ];
+
   return (
     <DashboardLayout>
       <div className="space-y-6 animate-fade-in">
@@ -51,9 +47,17 @@ export default function Dashboard() {
 
         {/* Stat Cards */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {stats.map((stat) => (
-            <StatCard key={stat.title} {...stat} />
-          ))}
+          {isLoading ? (
+            <>
+              {[1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="h-[120px] rounded-lg" />
+              ))}
+            </>
+          ) : (
+            statCards.map((stat) => (
+              <StatCard key={stat.title} {...stat} />
+            ))
+          )}
         </div>
 
         {/* Quick Actions */}
