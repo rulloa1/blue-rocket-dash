@@ -263,6 +263,7 @@ export type Database = {
           industry: string | null
           notes: string | null
           phone: string | null
+          source: string | null
           status: Database["public"]["Enums"]["lead_status"]
           updated_at: string
           user_id: string
@@ -277,6 +278,7 @@ export type Database = {
           industry?: string | null
           notes?: string | null
           phone?: string | null
+          source?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
           user_id: string
@@ -291,6 +293,7 @@ export type Database = {
           industry?: string | null
           notes?: string | null
           phone?: string | null
+          source?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
           user_id?: string
