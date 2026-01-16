@@ -14,6 +14,84 @@ export type Database = {
   }
   public: {
     Tables: {
+      email_templates: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          name: string
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          name: string
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          name?: string
+          subject?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      enrollment_step_tracking: {
+        Row: {
+          bounced_at: string | null
+          enrollment_id: string
+          id: string
+          opened_at: string | null
+          replied_at: string | null
+          scheduled_for: string | null
+          sent_at: string | null
+          step_id: string
+        }
+        Insert: {
+          bounced_at?: string | null
+          enrollment_id: string
+          id?: string
+          opened_at?: string | null
+          replied_at?: string | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          step_id: string
+        }
+        Update: {
+          bounced_at?: string | null
+          enrollment_id?: string
+          id?: string
+          opened_at?: string | null
+          replied_at?: string | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          step_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enrollment_step_tracking_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "sequence_enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollment_step_tracking_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "sequence_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_activities: {
         Row: {
           action: string
@@ -126,6 +204,122 @@ export type Database = {
         }
         Relationships: []
       }
+      sequence_enrollments: {
+        Row: {
+          completed_at: string | null
+          current_step: number
+          enrolled_at: string
+          id: string
+          lead_id: string
+          sequence_id: string
+          status: Database["public"]["Enums"]["enrollment_status"]
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          current_step?: number
+          enrolled_at?: string
+          id?: string
+          lead_id: string
+          sequence_id: string
+          status?: Database["public"]["Enums"]["enrollment_status"]
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          current_step?: number
+          enrolled_at?: string
+          id?: string
+          lead_id?: string
+          sequence_id?: string
+          status?: Database["public"]["Enums"]["enrollment_status"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sequence_enrollments_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sequence_enrollments_sequence_id_fkey"
+            columns: ["sequence_id"]
+            isOneToOne: false
+            referencedRelation: "sequences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sequence_steps: {
+        Row: {
+          body: string
+          created_at: string
+          delay_days: number
+          id: string
+          sequence_id: string
+          step_order: number
+          subject: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          delay_days?: number
+          id?: string
+          sequence_id: string
+          step_order: number
+          subject: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          delay_days?: number
+          id?: string
+          sequence_id?: string
+          step_order?: number
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sequence_steps_sequence_id_fkey"
+            columns: ["sequence_id"]
+            isOneToOne: false
+            referencedRelation: "sequences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sequences: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          status: Database["public"]["Enums"]["sequence_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          status?: Database["public"]["Enums"]["sequence_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          status?: Database["public"]["Enums"]["sequence_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -134,7 +328,14 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      enrollment_status:
+        | "active"
+        | "paused"
+        | "completed"
+        | "bounced"
+        | "replied"
       lead_status: "new" | "contacted" | "qualified" | "not_interested"
+      sequence_status: "draft" | "active" | "paused"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -262,7 +463,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      enrollment_status: [
+        "active",
+        "paused",
+        "completed",
+        "bounced",
+        "replied",
+      ],
       lead_status: ["new", "contacted", "qualified", "not_interested"],
+      sequence_status: ["draft", "active", "paused"],
     },
   },
 } as const
