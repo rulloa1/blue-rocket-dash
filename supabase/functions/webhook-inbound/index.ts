@@ -1,10 +1,9 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-webhook-token",
+    "authorization, x-client-info, apikey, content-type, x-webhook-token, x-webhook-key",
 };
 
 interface InboundLeadPayload {
@@ -14,9 +13,16 @@ interface InboundLeadPayload {
   industry?: string;
   website?: string;
   notes?: string;
+  source?: string;
 }
 
-serve(async (req: Request): Promise<Response> => {
+interface WebhookPayload {
+  event: string;
+  data: Record<string, unknown>;
+  timestamp: string;
+}
+
+Deno.serve(async (req: Request): Promise<Response> => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -30,11 +36,19 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   try {
-    const webhookToken = req.headers.get("x-webhook-token");
+    // Get webhook token from header OR query param (for Make.com/n8n/Zapier compatibility)
+    const url = new URL(req.url);
+    const webhookToken = 
+      req.headers.get("x-webhook-token") || 
+      req.headers.get("x-webhook-key") || 
+      url.searchParams.get("key") ||
+      url.searchParams.get("token");
 
     if (!webhookToken) {
       return new Response(
-        JSON.stringify({ error: "Missing webhook token. Include x-webhook-token header." }),
+        JSON.stringify({ 
+          error: "Missing webhook token. Include x-webhook-token header or ?key= query param." 
+        }),
         {
           status: 401,
           headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -55,6 +69,7 @@ serve(async (req: Request): Promise<Response> => {
       .single();
 
     if (settingsError || !settings) {
+      console.error("Invalid webhook token:", settingsError);
       return new Response(
         JSON.stringify({ error: "Invalid webhook token" }),
         {
@@ -64,7 +79,9 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
+    const userId = settings.user_id;
     const payload: InboundLeadPayload = await req.json();
+    console.log("Received lead payload:", JSON.stringify(payload));
 
     // Validate required fields
     if (!payload.business_name) {
@@ -77,17 +94,18 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    // Create the lead
+    // Create the lead with source field
     const { data: lead, error: leadError } = await supabase
       .from("leads")
       .insert({
-        user_id: settings.user_id,
+        user_id: userId,
         business_name: payload.business_name,
         email: payload.email || null,
         phone: payload.phone || null,
         industry: payload.industry || null,
         website: payload.website || null,
         notes: payload.notes || null,
+        source: payload.source || "webhook",
         status: "new",
       })
       .select()
@@ -104,23 +122,85 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
+    console.log("Lead created via webhook:", lead.id);
+
     // Log activity
     await supabase.from("lead_activities").insert({
       lead_id: lead.id,
-      user_id: settings.user_id,
+      user_id: userId,
       action: "created",
-      description: "Lead created via webhook",
+      description: `Lead created via ${payload.source || "webhook"}`,
     });
 
-    console.log("Lead created via webhook:", lead.id);
+    // Trigger outbound webhooks for "new_lead" event
+    const { data: webhooks } = await supabase
+      .from("webhooks")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("trigger_event", "new_lead")
+      .eq("is_active", true);
+
+    if (webhooks && webhooks.length > 0) {
+      console.log(`Triggering ${webhooks.length} outbound webhook(s)`);
+
+      const webhookPayload: WebhookPayload = {
+        event: "new_lead",
+        data: {
+          id: lead.id,
+          business_name: lead.business_name,
+          industry: lead.industry,
+          phone: lead.phone,
+          email: lead.email,
+          website: lead.website,
+          source: lead.source,
+          status: lead.status,
+          created_at: lead.created_at,
+        },
+        timestamp: new Date().toISOString(),
+      };
+
+      // Fire webhooks (fire-and-forget pattern for speed)
+      for (const webhook of webhooks) {
+        (async () => {
+          try {
+            const response = await fetch(webhook.url, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(webhookPayload),
+            });
+
+            await supabase
+              .from("webhooks")
+              .update({
+                last_triggered_at: new Date().toISOString(),
+                last_status_code: response.status,
+              })
+              .eq("id", webhook.id);
+
+            console.log(`Webhook ${webhook.name} triggered: ${response.status}`);
+          } catch (err) {
+            console.error(`Webhook ${webhook.name} failed:`, err);
+            await supabase
+              .from("webhooks")
+              .update({
+                last_triggered_at: new Date().toISOString(),
+                last_status_code: 0,
+              })
+              .eq("id", webhook.id);
+          }
+        })();
+      }
+    }
 
     return new Response(
       JSON.stringify({
         success: true,
+        lead_id: lead.id,
         lead: {
           id: lead.id,
           business_name: lead.business_name,
           status: lead.status,
+          source: lead.source,
           created_at: lead.created_at,
         },
       }),
@@ -129,10 +209,11 @@ serve(async (req: Request): Promise<Response> => {
         headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error("Webhook error:", error);
     return new Response(
-      JSON.stringify({ error: "Internal server error", details: error.message }),
+      JSON.stringify({ error: "Internal server error", details: errorMessage }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
