@@ -69,26 +69,44 @@ export default function Dashboard() {
           <div className="rounded-lg border border-border bg-card p-5">
             <h3 className="mb-4 font-medium text-foreground">Pipeline Overview</h3>
             <div className="space-y-4">
-              {[
-                { stage: 'Discovery', count: 45, color: 'bg-primary' },
-                { stage: 'Qualification', count: 32, color: 'bg-primary/80' },
-                { stage: 'Proposal', count: 18, color: 'bg-primary/60' },
-                { stage: 'Negotiation', count: 12, color: 'bg-primary/40' },
-                { stage: 'Closed Won', count: 8, color: 'bg-success' },
-              ].map((stage) => (
-                <div key={stage.stage} className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">{stage.stage}</span>
-                    <span className="text-foreground font-medium">{stage.count}</span>
-                  </div>
-                  <div className="h-2 w-full rounded-full bg-muted">
-                    <div
-                      className={`h-2 rounded-full ${stage.color} transition-all`}
-                      style={{ width: `${(stage.count / 45) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
+              {isLoading ? (
+                <>
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div key={i} className="space-y-2">
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-2 w-full" />
+                    </div>
+                  ))}
+                </>
+              ) : (
+                (() => {
+                  const stages = stats?.pipelineStages || [];
+                  const maxCount = Math.max(...stages.map(s => s.count), 1);
+                  const stageColors = [
+                    'bg-primary',
+                    'bg-primary/80',
+                    'bg-primary/60',
+                    'bg-primary/50',
+                    'bg-primary/40',
+                    'bg-success',
+                  ];
+                  
+                  return stages.map((stage, index) => (
+                    <div key={stage.stage} className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">{stage.label}</span>
+                        <span className="text-foreground font-medium">{stage.count}</span>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-muted">
+                        <div
+                          className={`h-2 rounded-full ${stageColors[index] || 'bg-primary'} transition-all`}
+                          style={{ width: `${(stage.count / maxCount) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  ));
+                })()
+              )}
             </div>
           </div>
         </div>
