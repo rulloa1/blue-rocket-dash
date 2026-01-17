@@ -10,25 +10,161 @@ const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/4gM5kC0sQ2DwbCl6Kx1Jm00';
 
 const TEMPLATE_STYLES = {
   modern: {
-    description: 'Clean lines, bold typography, contemporary feel',
-    colors: 'Use a modern color palette with primary blue (#3B82F6), white backgrounds, dark text. Sans-serif fonts like Inter or system fonts.',
-    layout: 'Minimalist layout with lots of whitespace, subtle shadows, rounded corners, smooth animations',
+    name: 'Modern',
+    description: 'Clean, contemporary design with bold typography and smooth gradients',
+    colors: {
+      primary: '#3B82F6',
+      secondary: '#1E40AF', 
+      accent: '#06B6D4',
+      background: '#FFFFFF',
+      surface: '#F8FAFC',
+      text: '#0F172A',
+      textMuted: '#64748B',
+    },
+    fonts: "font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;",
+    heroStyle: 'gradient background with floating geometric shapes',
+    features: ['Smooth hover animations', 'Gradient CTAs', 'Card-based layouts', 'Subtle shadows'],
   },
   classic: {
-    description: 'Timeless elegance with refined traditional aesthetics',
-    colors: 'Warm, sophisticated palette with deep navy (#1e3a5f), cream (#f5f0e6), gold accents (#c9a227). Serif fonts for headings.',
-    layout: 'Balanced, symmetrical layout with elegant borders, refined spacing, traditional structure',
+    name: 'Classic',
+    description: 'Timeless elegance with refined typography and sophisticated color palette',
+    colors: {
+      primary: '#1E3A5F',
+      secondary: '#2C5282',
+      accent: '#C9A227',
+      background: '#FFFEF8',
+      surface: '#F5F0E6',
+      text: '#1A202C',
+      textMuted: '#4A5568',
+    },
+    fonts: "font-family: 'Georgia', 'Times New Roman', serif;",
+    heroStyle: 'elegant overlay with refined borders and gold accents',
+    features: ['Serif typography for headings', 'Elegant gold accents', 'Refined spacing', 'Classic borders'],
   },
   minimal: {
-    description: 'Less is more — focused on content and whitespace',
-    colors: 'Monochromatic palette, lots of white space, black text (#111), subtle gray accents. Clean sans-serif fonts.',
-    layout: 'Maximum whitespace, only essential elements, ultra-clean typography, no decorative elements',
+    name: 'Minimal',
+    description: 'Ultra-clean design focused on content with maximum whitespace',
+    colors: {
+      primary: '#18181B',
+      secondary: '#3F3F46',
+      accent: '#18181B',
+      background: '#FFFFFF',
+      surface: '#FAFAFA',
+      text: '#09090B',
+      textMuted: '#71717A',
+    },
+    fonts: "font-family: 'Helvetica Neue', Arial, sans-serif;",
+    heroStyle: 'clean typography-focused hero with minimal elements',
+    features: ['Maximum whitespace', 'No decorative elements', 'Pure typography', 'Monochromatic palette'],
   },
   bold: {
-    description: 'Eye-catching design with vibrant colors and strong presence',
-    colors: 'Vibrant gradient backgrounds, bold primary color (#FF6B35 or #7C3AED), high contrast, dynamic accents.',
-    layout: 'Large headlines, dramatic sections, bold CTAs, dynamic geometric shapes, energetic feel',
+    name: 'Bold',
+    description: 'High-impact design with vibrant gradients and dynamic elements',
+    colors: {
+      primary: '#7C3AED',
+      secondary: '#DB2777',
+      accent: '#F59E0B',
+      background: '#0F0F23',
+      surface: '#1A1A2E',
+      text: '#FFFFFF',
+      textMuted: '#A1A1AA',
+    },
+    fonts: "font-family: 'Poppins', 'Montserrat', sans-serif;",
+    heroStyle: 'dark theme with vibrant gradient accents and animated elements',
+    features: ['Dark mode by default', 'Vibrant gradient buttons', 'Dynamic geometric shapes', 'High contrast'],
   },
+  nature: {
+    name: 'Nature',
+    description: 'Organic, earthy design inspired by natural elements',
+    colors: {
+      primary: '#166534',
+      secondary: '#15803D',
+      accent: '#CA8A04',
+      background: '#FEFEF8',
+      surface: '#F0FDF4',
+      text: '#14532D',
+      textMuted: '#4D7C0F',
+    },
+    fonts: "font-family: 'Nunito', 'Quicksand', sans-serif;",
+    heroStyle: 'organic shapes with natural textures and earthy tones',
+    features: ['Organic border radius', 'Natural color palette', 'Leaf/nature icons', 'Soft transitions'],
+  },
+  tech: {
+    name: 'Tech',
+    description: 'Futuristic, cutting-edge design for technology-focused businesses',
+    colors: {
+      primary: '#00D9FF',
+      secondary: '#0099FF',
+      accent: '#FF00FF',
+      background: '#0A0A0F',
+      surface: '#12121A',
+      text: '#E4E4E7',
+      textMuted: '#71717A',
+    },
+    fonts: "font-family: 'JetBrains Mono', 'Fira Code', monospace;",
+    heroStyle: 'dark cyber aesthetic with neon accents and grid patterns',
+    features: ['Neon glow effects', 'Grid background patterns', 'Monospace fonts', 'Futuristic animations'],
+  },
+};
+
+const generateIndustryContent = (industry: string, businessName: string) => {
+  const industryLower = (industry || 'general').toLowerCase();
+  
+  const industryContent: Record<string, { tagline: string; services: string[]; benefits: string[] }> = {
+    restaurant: {
+      tagline: 'Authentic flavors, memorable experiences',
+      services: ['Dine-In Experience', 'Private Events', 'Catering Services'],
+      benefits: ['Farm-to-table ingredients', 'Award-winning chefs', 'Cozy atmosphere'],
+    },
+    healthcare: {
+      tagline: 'Your health, our priority',
+      services: ['Primary Care', 'Specialized Treatment', 'Preventive Care'],
+      benefits: ['Board-certified doctors', 'State-of-the-art facilities', 'Compassionate care'],
+    },
+    fitness: {
+      tagline: 'Transform your body, elevate your life',
+      services: ['Personal Training', 'Group Classes', 'Nutrition Coaching'],
+      benefits: ['Expert certified trainers', 'Modern equipment', 'Flexible schedules'],
+    },
+    technology: {
+      tagline: 'Innovation that drives results',
+      services: ['Custom Development', 'Cloud Solutions', 'Digital Transformation'],
+      benefits: ['Cutting-edge technology', 'Scalable solutions', '24/7 support'],
+    },
+    realestate: {
+      tagline: 'Find your dream property',
+      services: ['Property Sales', 'Rentals', 'Property Management'],
+      benefits: ['Expert market knowledge', 'Personalized service', 'Extensive listings'],
+    },
+    legal: {
+      tagline: 'Trusted legal expertise',
+      services: ['Consultation', 'Representation', 'Document Preparation'],
+      benefits: ['Experienced attorneys', 'Confidential service', 'Results-driven approach'],
+    },
+    education: {
+      tagline: 'Empowering minds, shaping futures',
+      services: ['Tutoring', 'Test Preparation', 'Skill Development'],
+      benefits: ['Expert instructors', 'Personalized learning', 'Proven results'],
+    },
+    beauty: {
+      tagline: 'Where beauty meets artistry',
+      services: ['Hair Styling', 'Skincare', 'Wellness Treatments'],
+      benefits: ['Licensed professionals', 'Premium products', 'Relaxing ambiance'],
+    },
+    default: {
+      tagline: 'Excellence in every detail',
+      services: ['Professional Services', 'Custom Solutions', 'Expert Consultation'],
+      benefits: ['Industry expertise', 'Quality assurance', 'Customer-focused approach'],
+    },
+  };
+
+  for (const key of Object.keys(industryContent)) {
+    if (industryLower.includes(key)) {
+      return industryContent[key];
+    }
+  }
+  
+  return industryContent.default;
 };
 
 serve(async (req) => {
@@ -44,18 +180,15 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    // Get the authorization header to identify the user
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       throw new Error("Authorization header is required");
     }
 
-    // Initialize Supabase client
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Verify the user's JWT and get user ID
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
@@ -63,33 +196,79 @@ serve(async (req) => {
       throw new Error("Invalid authentication token");
     }
 
-    const templateStyle = TEMPLATE_STYLES[templateId as keyof typeof TEMPLATE_STYLES] || TEMPLATE_STYLES.modern;
+    const template = TEMPLATE_STYLES[templateId as keyof typeof TEMPLATE_STYLES] || TEMPLATE_STYLES.modern;
+    const industryContent = generateIndustryContent(industry, businessName);
 
-    const systemPrompt = `You are an expert web designer that creates beautiful, professional single-page websites. 
-Generate complete, valid HTML for a landing page. The HTML should be self-contained with inline CSS styles.
-Include the Stripe payment link as the main CTA button: ${STRIPE_PAYMENT_LINK}
+    const systemPrompt = `You are a world-class web designer creating stunning, conversion-optimized landing pages.
+Your task is to generate a complete, production-ready HTML landing page.
 
-Design Style: ${templateStyle.description}
-Color Guidelines: ${templateStyle.colors}
-Layout Guidelines: ${templateStyle.layout}
+## DESIGN SPECIFICATIONS
 
-Requirements:
-- Create a complete HTML document with <!DOCTYPE html>, <html>, <head>, and <body> tags
-- Include all CSS as inline styles or in a <style> tag in the head
-- Make it mobile-responsive using CSS
-- Include these sections: Hero, About/Services, Features (3 items), Call-to-Action with the payment button, Footer
-- The design must look professional and polished
-- Use real placeholder content relevant to the business
-- Include the payment link (${STRIPE_PAYMENT_LINK}) as "Get Started Now" or "Start Today" button`;
+**Template: ${template.name}**
+${template.description}
 
-    const userPrompt = `Create a ${templateId} style landing page for:
-Business Name: ${businessName}
-Industry: ${industry || 'General Business'}
-${email ? `Contact Email: ${email}` : ''}
-${phone ? `Phone: ${phone}` : ''}
-${website ? `Website: ${website}` : ''}
+**Color Palette:**
+- Primary: ${template.colors.primary}
+- Secondary: ${template.colors.secondary}
+- Accent: ${template.colors.accent}
+- Background: ${template.colors.background}
+- Surface: ${template.colors.surface}
+- Text: ${template.colors.text}
+- Text Muted: ${template.colors.textMuted}
 
-Generate a complete, beautiful HTML page that represents this business professionally.`;
+**Typography:** ${template.fonts}
+
+**Hero Style:** ${template.heroStyle}
+
+**Design Features to Include:**
+${template.features.map(f => `- ${f}`).join('\n')}
+
+## CONTENT REQUIREMENTS
+
+**Business:** ${businessName}
+**Industry:** ${industry || 'General Business'}
+**Tagline suggestion:** "${industryContent.tagline}"
+
+**Suggested Services:**
+${industryContent.services.map((s, i) => `${i + 1}. ${s}`).join('\n')}
+
+**Key Benefits:**
+${industryContent.benefits.map((b, i) => `${i + 1}. ${b}`).join('\n')}
+
+## TECHNICAL REQUIREMENTS
+
+1. Complete valid HTML5 document with DOCTYPE
+2. ALL styles must be in a <style> tag in the <head> - no external stylesheets
+3. Fully responsive design using CSS media queries
+4. Include Google Fonts import for typography
+5. Smooth scroll behavior and hover transitions
+6. The main CTA button MUST link to: ${STRIPE_PAYMENT_LINK}
+7. Include subtle animations (fade-in, hover effects)
+
+## REQUIRED SECTIONS (in order)
+
+1. **Navigation** - Sticky/fixed nav with logo (business name) and links
+2. **Hero Section** - Compelling headline, subheadline, and prominent CTA button
+3. **About/Introduction** - Brief company description with value proposition
+4. **Services/Features** - 3 service cards with icons (use Unicode/emoji icons)
+5. **Benefits/Why Choose Us** - 3-4 key benefits with icons
+6. **Testimonial** - One customer quote (create realistic placeholder)
+7. **Call-to-Action** - Final conversion section with payment button
+8. **Footer** - Contact info, links, copyright
+
+## IMPORTANT NOTES
+
+- Make the design look PROFESSIONAL and POLISHED - not generic
+- Use realistic, industry-appropriate content
+- Ensure excellent contrast and readability
+- CTA buttons should stand out prominently
+- Add loading="lazy" to any images
+- Contact info should include: ${email ? `Email: ${email}` : ''}${phone ? ` | Phone: ${phone}` : ''}
+${website ? `- Include link to: ${website}` : ''}
+
+Generate the complete HTML now. Do not include any markdown formatting or explanations - just the raw HTML.`;
+
+    const userPrompt = `Generate a beautiful ${template.name} style landing page for "${businessName}" in the ${industry || 'General Business'} industry. Make it look professional and conversion-focused with the Stripe payment button prominently featured.`;
 
     console.log('Generating website for:', businessName, 'with template:', templateId);
 
@@ -135,16 +314,21 @@ Generate a complete, beautiful HTML page that represents this business professio
     if (htmlMatch) {
       cleanHtml = htmlMatch[1].trim();
     } else {
-      // Try without language specifier
       const codeMatch = generatedHtml.match(/```\n?([\s\S]*?)```/);
       if (codeMatch) {
         cleanHtml = codeMatch[1].trim();
       }
     }
 
+    // Ensure the HTML starts with DOCTYPE if it was stripped
+    if (!cleanHtml.toLowerCase().startsWith('<!doctype')) {
+      if (cleanHtml.toLowerCase().startsWith('<html')) {
+        cleanHtml = '<!DOCTYPE html>\n' + cleanHtml;
+      }
+    }
+
     console.log('Website generated successfully, saving to database...');
 
-    // Save the generated website to the database
     const { data: websiteData, error: insertError } = await supabase
       .from('generated_websites')
       .insert({

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Palette, Sparkles, Layers, Zap, Loader2, Check, ExternalLink, Download, Copy, Link } from 'lucide-react';
+import { Palette, Sparkles, Layers, Zap, Loader2, Check, ExternalLink, Download, Copy, Link, Leaf, Cpu } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -35,32 +35,48 @@ const WEBSITE_TEMPLATES = [
     name: 'Modern',
     description: 'Clean lines, bold typography, and a contemporary feel',
     icon: Sparkles,
-    preview: 'bg-gradient-to-br from-primary/20 via-primary/10 to-accent/20',
-    features: ['Minimalist layout', 'Sans-serif fonts', 'Subtle animations'],
+    preview: 'bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-cyan-500/20',
+    features: ['Gradient accents', 'Smooth animations', 'Card layouts'],
   },
   {
     id: 'classic',
     name: 'Classic',
     description: 'Timeless elegance with refined traditional aesthetics',
     icon: Palette,
-    preview: 'bg-gradient-to-br from-amber-900/20 via-stone-800/10 to-amber-800/20',
-    features: ['Serif typography', 'Balanced layout', 'Warm tones'],
+    preview: 'bg-gradient-to-br from-amber-900/20 via-stone-800/10 to-amber-700/20',
+    features: ['Serif typography', 'Gold accents', 'Elegant borders'],
   },
   {
     id: 'minimal',
     name: 'Minimal',
     description: 'Less is more — focused on content and whitespace',
     icon: Layers,
-    preview: 'bg-gradient-to-br from-muted via-background to-muted/50',
-    features: ['Maximum whitespace', 'Essential elements only', 'Fast loading'],
+    preview: 'bg-gradient-to-br from-zinc-200/50 via-white to-zinc-100/50',
+    features: ['Maximum whitespace', 'Pure typography', 'Fast loading'],
   },
   {
     id: 'bold',
     name: 'Bold',
-    description: 'Eye-catching design with vibrant colors and strong presence',
+    description: 'High-impact dark theme with vibrant gradients',
     icon: Zap,
-    preview: 'bg-gradient-to-br from-primary via-accent to-secondary',
-    features: ['Vibrant colors', 'Large headlines', 'Dynamic elements'],
+    preview: 'bg-gradient-to-br from-purple-600/30 via-pink-500/20 to-orange-500/30',
+    features: ['Dark mode', 'Neon gradients', 'Dynamic shapes'],
+  },
+  {
+    id: 'nature',
+    name: 'Nature',
+    description: 'Organic, earthy design inspired by natural elements',
+    icon: Leaf,
+    preview: 'bg-gradient-to-br from-green-600/20 via-emerald-500/10 to-yellow-600/20',
+    features: ['Earthy tones', 'Organic shapes', 'Warm palette'],
+  },
+  {
+    id: 'tech',
+    name: 'Tech',
+    description: 'Futuristic, cutting-edge design with cyber aesthetics',
+    icon: Cpu,
+    preview: 'bg-gradient-to-br from-cyan-400/30 via-blue-600/20 to-fuchsia-500/30',
+    features: ['Neon effects', 'Grid patterns', 'Monospace fonts'],
   },
 ];
 
@@ -227,7 +243,7 @@ export function WebsiteTemplateModal({
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {WEBSITE_TEMPLATES.map((template) => {
                 const Icon = template.icon;
                 const isSelected = selectedTemplate === template.id;
@@ -238,38 +254,41 @@ export function WebsiteTemplateModal({
                     onClick={() => setSelectedTemplate(template.id)}
                     disabled={isGenerating}
                     className={cn(
-                      'relative text-left rounded-lg border-2 p-4 transition-all hover:border-primary/50',
+                      'relative text-left rounded-xl border-2 p-3 transition-all hover:border-primary/50 hover:scale-[1.02]',
                       isSelected
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border bg-muted/30 hover:bg-muted/50',
+                        ? 'border-primary bg-primary/5 shadow-lg shadow-primary/10'
+                        : 'border-border bg-card hover:bg-muted/50',
                       isGenerating && 'opacity-50 cursor-not-allowed'
                     )}
                   >
                     {isSelected && (
-                      <div className="absolute top-3 right-3 h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                      <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-primary flex items-center justify-center">
                         <Check className="h-3 w-3 text-primary-foreground" />
                       </div>
                     )}
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       <div
                         className={cn(
-                          'h-20 rounded-md flex items-center justify-center',
+                          'h-16 rounded-lg flex items-center justify-center',
                           template.preview
                         )}
                       >
-                        <Icon className="h-8 w-8 text-foreground/50" />
+                        <Icon className={cn(
+                          'h-7 w-7',
+                          isSelected ? 'text-primary' : 'text-foreground/50'
+                        )} />
                       </div>
                       <div>
-                        <h4 className="font-semibold text-foreground">{template.name}</h4>
-                        <p className="text-xs text-muted-foreground mt-1">{template.description}</p>
+                        <h4 className="font-semibold text-foreground text-sm">{template.name}</h4>
+                        <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">{template.description}</p>
                       </div>
-                      <ul className="space-y-1">
+                      <ul className="space-y-0.5">
                         {template.features.map((feature) => (
                           <li
                             key={feature}
-                            className="text-xs text-muted-foreground flex items-center gap-1.5"
+                            className="text-[10px] text-muted-foreground flex items-center gap-1"
                           >
-                            <div className="h-1 w-1 rounded-full bg-primary" />
+                            <div className="h-1 w-1 rounded-full bg-primary flex-shrink-0" />
                             {feature}
                           </li>
                         ))}
