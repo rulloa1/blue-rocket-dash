@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -36,11 +37,30 @@ serve(async (req) => {
   }
 
   try {
-    const { businessName, industry, templateId, email, phone, website } = await req.json();
+    const { businessName, industry, templateId, email, phone, website, leadId } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
+    }
+
+    // Get the authorization header to identify the user
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error("Authorization header is required");
+    }
+
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Verify the user's JWT and get user ID
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      throw new Error("Invalid authentication token");
     }
 
     const templateStyle = TEMPLATE_STYLES[templateId as keyof typeof TEMPLATE_STYLES] || TEMPLATE_STYLES.modern;
@@ -122,10 +142,34 @@ Generate a complete, beautiful HTML page that represents this business professio
       }
     }
 
-    console.log('Website generated successfully');
+    console.log('Website generated successfully, saving to database...');
+
+    // Save the generated website to the database
+    const { data: websiteData, error: insertError } = await supabase
+      .from('generated_websites')
+      .insert({
+        user_id: user.id,
+        lead_id: leadId || null,
+        business_name: businessName,
+        template_id: templateId,
+        html_content: cleanHtml,
+      })
+      .select('public_id')
+      .single();
+
+    if (insertError) {
+      console.error('Error saving website:', insertError);
+      throw new Error('Failed to save website');
+    }
+
+    console.log('Website saved with public_id:', websiteData.public_id);
 
     return new Response(
-      JSON.stringify({ success: true, html: cleanHtml }),
+      JSON.stringify({ 
+        success: true, 
+        html: cleanHtml,
+        publicId: websiteData.public_id,
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
