@@ -14,13 +14,16 @@ import {
   MessageSquare,
   Edit,
   UserPlus,
+  LayoutTemplate,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { LeadStatusBadge } from './LeadStatusBadge';
+import { WebsiteTemplateModal } from './WebsiteTemplateModal';
 import { AIScoreIndicator } from './AIScoreIndicator';
 import {
   useLead,
@@ -50,11 +53,24 @@ export function LeadDrawer({ leadId, open, onOpenChange }: LeadDrawerProps) {
   const { data: activities = [], isLoading: activitiesLoading } = useLeadActivities(leadId);
   const addNote = useAddLeadNote();
   const [newNote, setNewNote] = useState('');
+  const [showWebsiteModal, setShowWebsiteModal] = useState(false);
+  const [isGeneratingWebsite, setIsGeneratingWebsite] = useState(false);
 
   const handleAddNote = async () => {
     if (!leadId || !newNote.trim()) return;
     await addNote.mutateAsync({ leadId, content: newNote.trim() });
     setNewNote('');
+  };
+
+  const handleGenerateWebsite = async (templateId: string) => {
+    setIsGeneratingWebsite(true);
+    // Simulate website generation
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    setIsGeneratingWebsite(false);
+    setShowWebsiteModal(false);
+    toast.success(`Website preview generated with ${templateId} template!`, {
+      description: `A ${templateId} style website has been created for ${lead?.business_name}`,
+    });
   };
 
   return (
@@ -159,14 +175,24 @@ export function LeadDrawer({ leadId, open, onOpenChange }: LeadDrawerProps) {
               <Separator className="bg-border" />
 
               {/* Actions */}
-              <div className="flex gap-3">
-                <Button className="flex-1 gap-2">
-                  <Send className="h-4 w-4" />
-                  Send to Outreach
-                </Button>
-                <Button variant="secondary" className="flex-1 gap-2">
-                  <FileText className="h-4 w-4" />
-                  Create Proposal
+              <div className="space-y-3">
+                <div className="flex gap-3">
+                  <Button className="flex-1 gap-2">
+                    <Send className="h-4 w-4" />
+                    Send to Outreach
+                  </Button>
+                  <Button variant="secondary" className="flex-1 gap-2">
+                    <FileText className="h-4 w-4" />
+                    Create Proposal
+                  </Button>
+                </div>
+                <Button
+                  variant="outline"
+                  className="w-full gap-2"
+                  onClick={() => setShowWebsiteModal(true)}
+                >
+                  <LayoutTemplate className="h-4 w-4" />
+                  Create Website
                 </Button>
               </div>
 
@@ -258,6 +284,16 @@ export function LeadDrawer({ leadId, open, onOpenChange }: LeadDrawerProps) {
           )}
         </ScrollArea>
       </SheetContent>
+
+      {lead && (
+        <WebsiteTemplateModal
+          open={showWebsiteModal}
+          onOpenChange={setShowWebsiteModal}
+          leadName={lead.business_name}
+          onGenerate={handleGenerateWebsite}
+          isGenerating={isGeneratingWebsite}
+        />
+      )}
     </Sheet>
   );
 }

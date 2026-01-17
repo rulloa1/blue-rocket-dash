@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { ExternalLink, MoreHorizontal, Eye, Pencil, Trash2 } from 'lucide-react';
+import { ExternalLink, MoreHorizontal, Eye, Pencil, Trash2, LayoutTemplate } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   Table,
   TableBody,
@@ -29,6 +30,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { LeadStatusBadge } from './LeadStatusBadge';
 import { AIScoreIndicator } from './AIScoreIndicator';
+import { WebsiteTemplateModal } from './WebsiteTemplateModal';
 import { useDeleteLead, LeadStatus } from '@/hooks/useLeads';
 import { Database } from '@/integrations/supabase/types';
 
@@ -49,6 +51,8 @@ export function LeadsTable({
 }: LeadsTableProps) {
   const deleteLead = useDeleteLead();
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [websiteLeadId, setWebsiteLeadId] = useState<string | null>(null);
+  const [isGeneratingWebsite, setIsGeneratingWebsite] = useState(false);
 
   const allSelected = leads.length > 0 && selectedIds.length === leads.length;
   const someSelected = selectedIds.length > 0 && selectedIds.length < leads.length;
@@ -74,6 +78,20 @@ export function LeadsTable({
       await deleteLead.mutateAsync(deleteId);
       setDeleteId(null);
     }
+  };
+
+  const websiteLead = leads.find((l) => l.id === websiteLeadId);
+
+  const handleGenerateWebsite = async (templateId: string) => {
+    if (!websiteLead) return;
+    setIsGeneratingWebsite(true);
+    // Simulate website generation
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    setIsGeneratingWebsite(false);
+    setWebsiteLeadId(null);
+    toast.success(`Website preview generated with ${templateId} template!`, {
+      description: `A ${templateId} style website has been created for ${websiteLead.business_name}`,
+    });
   };
 
   return (
@@ -163,6 +181,10 @@ export function LeadsTable({
                         <Pencil className="mr-2 h-4 w-4" />
                         Edit
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setWebsiteLeadId(lead.id)}>
+                        <LayoutTemplate className="mr-2 h-4 w-4" />
+                        Create Website
+                      </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => setDeleteId(lead.id)}
                         className="text-destructive focus:text-destructive"
@@ -198,6 +220,16 @@ export function LeadsTable({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {websiteLead && (
+        <WebsiteTemplateModal
+          open={!!websiteLeadId}
+          onOpenChange={(open) => !open && setWebsiteLeadId(null)}
+          leadName={websiteLead.business_name}
+          onGenerate={handleGenerateWebsite}
+          isGenerating={isGeneratingWebsite}
+        />
+      )}
     </>
   );
 }
