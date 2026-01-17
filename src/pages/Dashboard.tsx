@@ -1,4 +1,5 @@
 import { Users, UserCheck, FileText, Building2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
@@ -7,6 +8,7 @@ import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const { data: stats, isLoading } = useDashboardStats();
 
   const statCards = [
@@ -92,7 +94,11 @@ export default function Dashboard() {
                   ];
                   
                   return stages.map((stage, index) => (
-                    <div key={stage.stage} className="space-y-2">
+                    <button
+                      key={stage.stage}
+                      onClick={() => navigate(`/pipeline?stage=${stage.stage}`)}
+                      className="w-full space-y-2 text-left rounded-md p-2 -mx-2 hover:bg-muted/50 transition-colors cursor-pointer"
+                    >
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">{stage.label}</span>
                         <span className="text-foreground font-medium">{stage.count}</span>
@@ -103,7 +109,7 @@ export default function Dashboard() {
                           style={{ width: `${(stage.count / maxCount) * 100}%` }}
                         />
                       </div>
-                    </div>
+                    </button>
                   ));
                 })()
               )}
