@@ -52,7 +52,6 @@ export function LeadsTable({
   const deleteLead = useDeleteLead();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [websiteLeadId, setWebsiteLeadId] = useState<string | null>(null);
-  const [isGeneratingWebsite, setIsGeneratingWebsite] = useState(false);
 
   const allSelected = leads.length > 0 && selectedIds.length === leads.length;
   const someSelected = selectedIds.length > 0 && selectedIds.length < leads.length;
@@ -81,18 +80,6 @@ export function LeadsTable({
   };
 
   const websiteLead = leads.find((l) => l.id === websiteLeadId);
-
-  const handleGenerateWebsite = async (templateId: string) => {
-    if (!websiteLead) return;
-    setIsGeneratingWebsite(true);
-    // Simulate website generation
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setIsGeneratingWebsite(false);
-    setWebsiteLeadId(null);
-    toast.success(`Website preview generated with ${templateId} template!`, {
-      description: `A ${templateId} style website has been created for ${websiteLead.business_name}`,
-    });
-  };
 
   return (
     <>
@@ -225,9 +212,13 @@ export function LeadsTable({
         <WebsiteTemplateModal
           open={!!websiteLeadId}
           onOpenChange={(open) => !open && setWebsiteLeadId(null)}
-          leadName={websiteLead.business_name}
-          onGenerate={handleGenerateWebsite}
-          isGenerating={isGeneratingWebsite}
+          lead={{
+            business_name: websiteLead.business_name,
+            industry: websiteLead.industry,
+            email: websiteLead.email,
+            phone: websiteLead.phone,
+            website: websiteLead.website,
+          }}
         />
       )}
     </>

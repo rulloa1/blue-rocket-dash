@@ -54,23 +54,11 @@ export function LeadDrawer({ leadId, open, onOpenChange }: LeadDrawerProps) {
   const addNote = useAddLeadNote();
   const [newNote, setNewNote] = useState('');
   const [showWebsiteModal, setShowWebsiteModal] = useState(false);
-  const [isGeneratingWebsite, setIsGeneratingWebsite] = useState(false);
 
   const handleAddNote = async () => {
     if (!leadId || !newNote.trim()) return;
     await addNote.mutateAsync({ leadId, content: newNote.trim() });
     setNewNote('');
-  };
-
-  const handleGenerateWebsite = async (templateId: string) => {
-    setIsGeneratingWebsite(true);
-    // Simulate website generation
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setIsGeneratingWebsite(false);
-    setShowWebsiteModal(false);
-    toast.success(`Website preview generated with ${templateId} template!`, {
-      description: `A ${templateId} style website has been created for ${lead?.business_name}`,
-    });
   };
 
   return (
@@ -289,9 +277,13 @@ export function LeadDrawer({ leadId, open, onOpenChange }: LeadDrawerProps) {
         <WebsiteTemplateModal
           open={showWebsiteModal}
           onOpenChange={setShowWebsiteModal}
-          leadName={lead.business_name}
-          onGenerate={handleGenerateWebsite}
-          isGenerating={isGeneratingWebsite}
+          lead={{
+            business_name: lead.business_name,
+            industry: lead.industry,
+            email: lead.email,
+            phone: lead.phone,
+            website: lead.website,
+          }}
         />
       )}
     </Sheet>
