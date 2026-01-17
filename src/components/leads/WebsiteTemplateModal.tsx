@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Palette, Sparkles, Layers, Zap, Loader2, Check, ExternalLink, Download, Copy, Link, Leaf, Cpu } from 'lucide-react';
+import { Palette, Sparkles, Layers, Zap, Loader2, Check, ExternalLink, Download, Copy, Link, Leaf, Cpu, Wand2, Send, RotateCcw } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -80,6 +81,15 @@ const WEBSITE_TEMPLATES = [
   },
 ];
 
+const QUICK_EDIT_SUGGESTIONS = [
+  'Change the primary color to green',
+  'Make the headline bigger and bolder',
+  'Add more spacing between sections',
+  'Change the CTA button to red',
+  'Use a darker background color',
+  'Add a subtle pattern to the hero section',
+];
+
 export function WebsiteTemplateModal({
   open,
   onOpenChange,
@@ -88,17 +98,28 @@ export function WebsiteTemplateModal({
 }: WebsiteTemplateModalProps) {
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [generatedHtml, setGeneratedHtml] = useState<string | null>(null);
+  const [originalHtml, setOriginalHtml] = useState<string | null>(null);
   const [publicUrl, setPublicUrl] = useState<string | null>(null);
+  const [publicId, setPublicId] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [editRequest, setEditRequest] = useState('');
+  const [showEditPanel, setShowEditPanel] = useState(false);
+  const [editHistory, setEditHistory] = useState<string[]>([]);
 
   // Reset state when modal closes
   useEffect(() => {
     if (!open) {
       setSelectedTemplate(null);
       setGeneratedHtml(null);
+      setOriginalHtml(null);
       setPublicUrl(null);
+      setPublicId(null);
       setShowPreview(false);
+      setEditRequest('');
+      setShowEditPanel(false);
+      setEditHistory([]);
     }
   }, [open]);
 
@@ -125,8 +146,11 @@ export function WebsiteTemplateModal({
       const generatedPublicUrl = `${window.location.origin}/site/${data.publicId}`;
       
       setGeneratedHtml(data.html);
+      setOriginalHtml(data.html);
       setPublicUrl(generatedPublicUrl);
+      setPublicId(data.publicId);
       setShowPreview(true);
+      setEditHistory([]);
       toast.success('Website generated and hosted successfully!');
       onGenerate?.(selectedTemplate, data.html, generatedPublicUrl);
     } catch (error: any) {
@@ -140,6 +164,48 @@ export function WebsiteTemplateModal({
       }
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleEdit = async () => {
+    if (!editRequest.trim() || !generatedHtml) return;
+
+    setIsEditing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('edit-website', {
+        body: {
+          websiteId: publicId,
+          editRequest: editRequest.trim(),
+          currentHtml: generatedHtml,
+        },
+      });
+
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Failed to edit website');
+
+      setEditHistory(prev => [...prev, editRequest.trim()]);
+      setGeneratedHtml(data.html);
+      setEditRequest('');
+      toast.success('Website updated successfully!');
+    } catch (error: any) {
+      console.error('Error editing website:', error);
+      if (error.message?.includes('429') || error.message?.includes('Rate limit')) {
+        toast.error('Rate limit exceeded. Please try again in a moment.');
+      } else if (error.message?.includes('402')) {
+        toast.error('AI usage limit reached. Please add credits to continue.');
+      } else {
+        toast.error(error.message || 'Failed to edit website');
+      }
+    } finally {
+      setIsEditing(false);
+    }
+  };
+
+  const handleResetToOriginal = () => {
+    if (originalHtml) {
+      setGeneratedHtml(originalHtml);
+      setEditHistory([]);
+      toast.success('Reset to original version');
     }
   };
 
@@ -172,15 +238,13 @@ export function WebsiteTemplateModal({
     toast.success('Website downloaded!');
   };
 
-  const selectedTemplateData = WEBSITE_TEMPLATES.find((t) => t.id === selectedTemplate);
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={cn(
-        'bg-card border-border',
-        showPreview && generatedHtml ? 'sm:max-w-5xl' : 'sm:max-w-2xl'
+        'bg-card border-border max-h-[90vh] overflow-hidden flex flex-col',
+        showPreview && generatedHtml ? 'sm:max-w-6xl' : 'sm:max-w-2xl'
       )}>
-        <DialogHeader>
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="text-xl">
             {showPreview && generatedHtml 
               ? `Website Preview for ${lead.business_name}` 
@@ -188,48 +252,156 @@ export function WebsiteTemplateModal({
           </DialogTitle>
           <DialogDescription>
             {showPreview && generatedHtml 
-              ? 'Your AI-generated website is live and ready to share!'
+              ? 'Your AI-generated website is live! Edit it with AI or share with your lead.'
               : 'Choose a style template to generate a website with AI'}
           </DialogDescription>
         </DialogHeader>
 
         {showPreview && generatedHtml ? (
-          <div className="space-y-4">
+          <div className="flex-1 overflow-hidden flex flex-col space-y-3">
             {/* Shareable URL section */}
             {publicUrl && (
-              <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg border border-border">
+              <div className="flex items-center gap-2 p-2.5 bg-muted/50 rounded-lg border border-border flex-shrink-0">
                 <Link className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 <Input
                   value={publicUrl}
                   readOnly
-                  className="flex-1 bg-transparent border-0 focus-visible:ring-0 text-sm"
+                  className="flex-1 bg-transparent border-0 focus-visible:ring-0 text-sm h-8"
                 />
-                <Button variant="ghost" size="sm" onClick={handleCopyUrl} className="gap-1.5">
-                  <Copy className="h-4 w-4" />
+                <Button variant="ghost" size="sm" onClick={handleCopyUrl} className="gap-1.5 h-8">
+                  <Copy className="h-3.5 w-3.5" />
                   Copy
                 </Button>
               </div>
             )}
 
-            <div className="relative aspect-[16/10] rounded-lg border border-border overflow-hidden bg-white">
-              <iframe
-                srcDoc={generatedHtml}
-                className="w-full h-full"
-                title="Website Preview"
-                sandbox="allow-scripts"
-              />
+            {/* Main content area with preview and edit panel */}
+            <div className="flex-1 flex gap-3 min-h-0">
+              {/* Preview iframe */}
+              <div className={cn(
+                "relative rounded-lg border border-border overflow-hidden bg-white transition-all",
+                showEditPanel ? "flex-1" : "w-full"
+              )}>
+                <iframe
+                  srcDoc={generatedHtml}
+                  className="w-full h-full min-h-[400px]"
+                  title="Website Preview"
+                  sandbox="allow-scripts"
+                />
+              </div>
+
+              {/* Edit panel */}
+              {showEditPanel && (
+                <div className="w-80 flex-shrink-0 flex flex-col space-y-3 bg-muted/30 rounded-lg border border-border p-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium text-sm flex items-center gap-2">
+                      <Wand2 className="h-4 w-4 text-primary" />
+                      AI Editor
+                    </h4>
+                    {editHistory.length > 0 && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={handleResetToOriginal}
+                        className="h-7 text-xs gap-1"
+                      >
+                        <RotateCcw className="h-3 w-3" />
+                        Reset
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Edit history */}
+                  {editHistory.length > 0 && (
+                    <div className="space-y-1.5 max-h-24 overflow-y-auto">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Recent edits</p>
+                      {editHistory.slice(-3).map((edit, i) => (
+                        <div key={i} className="text-xs bg-background/50 rounded px-2 py-1 text-muted-foreground truncate">
+                          {edit}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Quick suggestions */}
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Quick edits</p>
+                    <div className="flex flex-wrap gap-1">
+                      {QUICK_EDIT_SUGGESTIONS.slice(0, 4).map((suggestion) => (
+                        <button
+                          key={suggestion}
+                          onClick={() => setEditRequest(suggestion)}
+                          disabled={isEditing}
+                          className="text-[10px] px-2 py-1 rounded-full bg-background border border-border hover:border-primary/50 hover:bg-primary/5 transition-colors disabled:opacity-50"
+                        >
+                          {suggestion}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Edit input */}
+                  <div className="flex-1 flex flex-col">
+                    <Textarea
+                      placeholder="Describe the changes you want... e.g., 'Make the header larger' or 'Change colors to blue and white'"
+                      value={editRequest}
+                      onChange={(e) => setEditRequest(e.target.value)}
+                      disabled={isEditing}
+                      className="flex-1 min-h-[100px] text-sm resize-none"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                          handleEdit();
+                        }
+                      }}
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-1">Press ⌘+Enter to apply</p>
+                  </div>
+
+                  <Button 
+                    onClick={handleEdit} 
+                    disabled={!editRequest.trim() || isEditing}
+                    className="w-full gap-2"
+                  >
+                    {isEditing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Applying changes...
+                      </>
+                    ) : (
+                      <>
+                        <Wand2 className="h-4 w-4" />
+                        Apply Changes
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
             </div>
-            <div className="flex gap-3">
+
+            {/* Action buttons */}
+            <div className="flex gap-2 flex-shrink-0">
               <Button
                 variant="outline"
                 onClick={() => {
                   setShowPreview(false);
                   setGeneratedHtml(null);
+                  setOriginalHtml(null);
                   setPublicUrl(null);
+                  setPublicId(null);
+                  setShowEditPanel(false);
+                  setEditHistory([]);
                 }}
                 className="flex-1"
               >
                 Generate Another
+              </Button>
+              <Button 
+                variant={showEditPanel ? "secondary" : "outline"}
+                onClick={() => setShowEditPanel(!showEditPanel)} 
+                className="gap-2"
+              >
+                <Wand2 className="h-4 w-4" />
+                {showEditPanel ? 'Hide Editor' : 'Edit with AI'}
               </Button>
               <Button variant="secondary" onClick={handleDownload} className="gap-2">
                 <Download className="h-4 w-4" />
@@ -237,7 +409,7 @@ export function WebsiteTemplateModal({
               </Button>
               <Button onClick={handleOpenPublicUrl} className="gap-2">
                 <ExternalLink className="h-4 w-4" />
-                Open Live Site
+                Open Live
               </Button>
             </div>
           </div>

@@ -1,1 +1,10 @@
 project_id = "pcqblxhcjyomvyyxkqcq"
+
+[functions.generate-website]
+verify_jwt = false
+
+[functions.edit-website]
+verify_jwt = false
+
+[functions.webhook-inbound]
+verify_jwt = false
