@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.webhook-inbound]
 verify_jwt = false
+
+[functions.send-website-email]
+verify_jwt = false
