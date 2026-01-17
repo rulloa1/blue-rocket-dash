@@ -186,6 +186,50 @@ export type Database = {
           },
         ]
       }
+      generated_websites: {
+        Row: {
+          business_name: string
+          created_at: string
+          html_content: string
+          id: string
+          lead_id: string | null
+          public_id: string
+          template_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_name: string
+          created_at?: string
+          html_content: string
+          id?: string
+          lead_id?: string | null
+          public_id?: string
+          template_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_name?: string
+          created_at?: string
+          html_content?: string
+          id?: string
+          lead_id?: string | null
+          public_id?: string
+          template_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_websites_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_activities: {
         Row: {
           action: string

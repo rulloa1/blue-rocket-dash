@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Palette, Sparkles, Layers, Zap, Eye, Loader2, Check, ExternalLink, Download } from 'lucide-react';
+import { Palette, Sparkles, Layers, Zap, Loader2, Check, ExternalLink, Download, Copy, Link } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -8,11 +8,13 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface Lead {
+  id?: string;
   business_name: string;
   industry?: string | null;
   email?: string | null;
@@ -24,7 +26,7 @@ interface WebsiteTemplateModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   lead: Lead;
-  onGenerate?: (templateId: string, html: string) => void;
+  onGenerate?: (templateId: string, html: string, publicUrl: string) => void;
 }
 
 const WEBSITE_TEMPLATES = [
@@ -71,6 +73,7 @@ export function WebsiteTemplateModal({
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedHtml, setGeneratedHtml] = useState<string | null>(null);
+  const [publicUrl, setPublicUrl] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
 
   // Reset state when modal closes
@@ -78,6 +81,7 @@ export function WebsiteTemplateModal({
     if (!open) {
       setSelectedTemplate(null);
       setGeneratedHtml(null);
+      setPublicUrl(null);
       setShowPreview(false);
     }
   }, [open]);
@@ -95,16 +99,20 @@ export function WebsiteTemplateModal({
           email: lead.email,
           phone: lead.phone,
           website: lead.website,
+          leadId: lead.id,
         },
       });
 
       if (error) throw error;
       if (!data?.success) throw new Error(data?.error || 'Failed to generate website');
 
+      const generatedPublicUrl = `${window.location.origin}/site/${data.publicId}`;
+      
       setGeneratedHtml(data.html);
+      setPublicUrl(generatedPublicUrl);
       setShowPreview(true);
-      toast.success('Website generated successfully!');
-      onGenerate?.(selectedTemplate, data.html);
+      toast.success('Website generated and hosted successfully!');
+      onGenerate?.(selectedTemplate, data.html, generatedPublicUrl);
     } catch (error: any) {
       console.error('Error generating website:', error);
       if (error.message?.includes('429') || error.message?.includes('Rate limit')) {
@@ -119,11 +127,19 @@ export function WebsiteTemplateModal({
     }
   };
 
-  const handleOpenInNewTab = () => {
-    if (!generatedHtml) return;
-    const blob = new Blob([generatedHtml], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    window.open(url, '_blank');
+  const handleCopyUrl = async () => {
+    if (!publicUrl) return;
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      toast.success('Link copied to clipboard!');
+    } catch {
+      toast.error('Failed to copy link');
+    }
+  };
+
+  const handleOpenPublicUrl = () => {
+    if (!publicUrl) return;
+    window.open(publicUrl, '_blank');
   };
 
   const handleDownload = () => {
@@ -156,13 +172,29 @@ export function WebsiteTemplateModal({
           </DialogTitle>
           <DialogDescription>
             {showPreview && generatedHtml 
-              ? 'Your AI-generated website is ready. Open in new tab or download the HTML.'
+              ? 'Your AI-generated website is live and ready to share!'
               : 'Choose a style template to generate a website with AI'}
           </DialogDescription>
         </DialogHeader>
 
         {showPreview && generatedHtml ? (
           <div className="space-y-4">
+            {/* Shareable URL section */}
+            {publicUrl && (
+              <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg border border-border">
+                <Link className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <Input
+                  value={publicUrl}
+                  readOnly
+                  className="flex-1 bg-transparent border-0 focus-visible:ring-0 text-sm"
+                />
+                <Button variant="ghost" size="sm" onClick={handleCopyUrl} className="gap-1.5">
+                  <Copy className="h-4 w-4" />
+                  Copy
+                </Button>
+              </div>
+            )}
+
             <div className="relative aspect-[16/10] rounded-lg border border-border overflow-hidden bg-white">
               <iframe
                 srcDoc={generatedHtml}
@@ -177,6 +209,7 @@ export function WebsiteTemplateModal({
                 onClick={() => {
                   setShowPreview(false);
                   setGeneratedHtml(null);
+                  setPublicUrl(null);
                 }}
                 className="flex-1"
               >
@@ -186,9 +219,9 @@ export function WebsiteTemplateModal({
                 <Download className="h-4 w-4" />
                 Download
               </Button>
-              <Button onClick={handleOpenInNewTab} className="gap-2">
+              <Button onClick={handleOpenPublicUrl} className="gap-2">
                 <ExternalLink className="h-4 w-4" />
-                Open Full Page
+                Open Live Site
               </Button>
             </div>
           </div>

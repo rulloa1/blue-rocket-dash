@@ -11,6 +11,7 @@ import Outreach from "./pages/Outreach";
 import Pipeline from "./pages/Pipeline";
 import Proposals from "./pages/Proposals";
 import Settings from "./pages/Settings";
+import PublicWebsite from "./pages/PublicWebsite";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/pipeline" element={<Pipeline />} />
             <Route path="/proposals" element={<Proposals />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/site/:publicId" element={<PublicWebsite />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
