@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Palette, Sparkles, Layers, Zap, Loader2, Check, ExternalLink, Download, Copy, Link, Leaf, Cpu, Wand2, Send, RotateCcw } from 'lucide-react';
+import { Palette, Sparkles, Layers, Zap, Loader2, Check, ExternalLink, Download, Copy, Link, Leaf, Cpu, Wand2, Send, RotateCcw, Mail } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -99,6 +99,7 @@ export function WebsiteTemplateModal({
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [generatedHtml, setGeneratedHtml] = useState<string | null>(null);
   const [originalHtml, setOriginalHtml] = useState<string | null>(null);
   const [publicUrl, setPublicUrl] = useState<string | null>(null);
@@ -236,6 +237,40 @@ export function WebsiteTemplateModal({
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     toast.success('Website downloaded!');
+  };
+
+  const handleSendEmail = async () => {
+    if (!publicUrl || !lead.email) {
+      toast.error('Lead email is required to send the preview');
+      return;
+    }
+
+    setIsSendingEmail(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-website-email', {
+        body: {
+          leadEmail: lead.email,
+          leadName: lead.business_name,
+          businessName: lead.business_name,
+          websitePreviewUrl: publicUrl,
+        },
+        headers: lead.id ? { 'x-lead-id': lead.id } : undefined,
+      });
+
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Failed to send email');
+
+      toast.success(`Email sent to ${lead.email}!`);
+    } catch (error: any) {
+      console.error('Error sending email:', error);
+      if (error.message?.includes('RESEND_API_KEY')) {
+        toast.error('Email service not configured. Please add RESEND_API_KEY in settings.');
+      } else {
+        toast.error(error.message || 'Failed to send email');
+      }
+    } finally {
+      setIsSendingEmail(false);
+    }
   };
 
   return (
@@ -407,6 +442,21 @@ export function WebsiteTemplateModal({
                 <Download className="h-4 w-4" />
                 Download
               </Button>
+              {lead.email && (
+                <Button 
+                  variant="secondary" 
+                  onClick={handleSendEmail} 
+                  disabled={isSendingEmail}
+                  className="gap-2"
+                >
+                  {isSendingEmail ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Mail className="h-4 w-4" />
+                  )}
+                  {isSendingEmail ? 'Sending...' : 'Send Email'}
+                </Button>
+              )}
               <Button onClick={handleOpenPublicUrl} className="gap-2">
                 <ExternalLink className="h-4 w-4" />
                 Open Live
