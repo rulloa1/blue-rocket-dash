@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Palette, Sparkles, Layers, Zap, Eye, Loader2, Check } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Palette, Sparkles, Layers, Zap, Eye, Loader2, Check, ExternalLink, Download } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -9,16 +9,23 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+interface Lead {
+  business_name: string;
+  industry?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  website?: string | null;
+}
 
 interface WebsiteTemplateModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  leadName: string;
-  onGenerate: (templateId: string) => void;
-  isGenerating?: boolean;
+  lead: Lead;
+  onGenerate?: (templateId: string, html: string) => void;
 }
-
-const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/4gM5kC0sQ2DwbCl6Kx1Jm00';
 
 const WEBSITE_TEMPLATES = [
   {
@@ -58,95 +65,130 @@ const WEBSITE_TEMPLATES = [
 export function WebsiteTemplateModal({
   open,
   onOpenChange,
-  leadName,
+  lead,
   onGenerate,
-  isGenerating = false,
 }: WebsiteTemplateModalProps) {
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-  const [previewMode, setPreviewMode] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedHtml, setGeneratedHtml] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
-  const handleGenerate = () => {
-    if (selectedTemplate) {
-      onGenerate(selectedTemplate);
+  // Reset state when modal closes
+  useEffect(() => {
+    if (!open) {
+      setSelectedTemplate(null);
+      setGeneratedHtml(null);
+      setShowPreview(false);
     }
+  }, [open]);
+
+  const handleGenerate = async () => {
+    if (!selectedTemplate) return;
+
+    setIsGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-website', {
+        body: {
+          businessName: lead.business_name,
+          industry: lead.industry,
+          templateId: selectedTemplate,
+          email: lead.email,
+          phone: lead.phone,
+          website: lead.website,
+        },
+      });
+
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Failed to generate website');
+
+      setGeneratedHtml(data.html);
+      setShowPreview(true);
+      toast.success('Website generated successfully!');
+      onGenerate?.(selectedTemplate, data.html);
+    } catch (error: any) {
+      console.error('Error generating website:', error);
+      if (error.message?.includes('429') || error.message?.includes('Rate limit')) {
+        toast.error('Rate limit exceeded. Please try again in a moment.');
+      } else if (error.message?.includes('402')) {
+        toast.error('AI usage limit reached. Please add credits to continue.');
+      } else {
+        toast.error(error.message || 'Failed to generate website');
+      }
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleOpenInNewTab = () => {
+    if (!generatedHtml) return;
+    const blob = new Blob([generatedHtml], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+  };
+
+  const handleDownload = () => {
+    if (!generatedHtml) return;
+    const blob = new Blob([generatedHtml], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${lead.business_name.toLowerCase().replace(/\s+/g, '-')}-website.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success('Website downloaded!');
   };
 
   const selectedTemplateData = WEBSITE_TEMPLATES.find((t) => t.id === selectedTemplate);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl bg-card border-border">
+      <DialogContent className={cn(
+        'bg-card border-border',
+        showPreview && generatedHtml ? 'sm:max-w-5xl' : 'sm:max-w-2xl'
+      )}>
         <DialogHeader>
-          <DialogTitle className="text-xl">Create Website for {leadName}</DialogTitle>
+          <DialogTitle className="text-xl">
+            {showPreview && generatedHtml 
+              ? `Website Preview for ${lead.business_name}` 
+              : `Create Website for ${lead.business_name}`}
+          </DialogTitle>
           <DialogDescription>
-            Choose a style template to generate a website preview
+            {showPreview && generatedHtml 
+              ? 'Your AI-generated website is ready. Open in new tab or download the HTML.'
+              : 'Choose a style template to generate a website with AI'}
           </DialogDescription>
         </DialogHeader>
 
-        {previewMode && selectedTemplateData ? (
+        {showPreview && generatedHtml ? (
           <div className="space-y-4">
-            <div
-              className={cn(
-                'relative aspect-video rounded-lg border border-border overflow-hidden',
-                selectedTemplateData.preview
-              )}
-            >
-              <div className="absolute inset-0 flex flex-col items-center justify-center p-6">
-                <div className="w-full max-w-md space-y-6 text-center">
-                  {/* Mock website preview */}
-                  <div className="space-y-2">
-                    <div className="h-4 w-24 mx-auto bg-foreground/20 rounded" />
-                    <div className="flex justify-center gap-4">
-                      <div className="h-2 w-12 bg-foreground/10 rounded" />
-                      <div className="h-2 w-12 bg-foreground/10 rounded" />
-                      <div className="h-2 w-12 bg-foreground/10 rounded" />
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="h-8 w-3/4 mx-auto bg-foreground/20 rounded" />
-                    <div className="h-3 w-full bg-foreground/10 rounded" />
-                    <div className="h-3 w-5/6 mx-auto bg-foreground/10 rounded" />
-                  </div>
-                  {/* Payment CTA Button */}
-                  <a
-                    href={STRIPE_PAYMENT_LINK}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center h-10 px-6 bg-primary text-primary-foreground rounded-md font-medium text-sm hover:bg-primary/90 transition-colors"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    Get Started Now
-                  </a>
-                  <div className="grid grid-cols-3 gap-3 pt-4">
-                    <div className="h-16 bg-foreground/10 rounded" />
-                    <div className="h-16 bg-foreground/10 rounded" />
-                    <div className="h-16 bg-foreground/10 rounded" />
-                  </div>
-                </div>
-              </div>
-              <div className="absolute top-3 left-3 flex items-center gap-2">
-                <selectedTemplateData.icon className="h-5 w-5 text-foreground/60" />
-                <span className="text-sm font-medium text-foreground/80">
-                  {selectedTemplateData.name} Style
-                </span>
-              </div>
+            <div className="relative aspect-[16/10] rounded-lg border border-border overflow-hidden bg-white">
+              <iframe
+                srcDoc={generatedHtml}
+                className="w-full h-full"
+                title="Website Preview"
+                sandbox="allow-scripts"
+              />
             </div>
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setPreviewMode(false)} className="flex-1">
-                Back to Templates
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowPreview(false);
+                  setGeneratedHtml(null);
+                }}
+                className="flex-1"
+              >
+                Generate Another
               </Button>
-              <Button onClick={handleGenerate} disabled={isGenerating} className="flex-1">
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Generate Website
-                  </>
-                )}
+              <Button variant="secondary" onClick={handleDownload} className="gap-2">
+                <Download className="h-4 w-4" />
+                Download
+              </Button>
+              <Button onClick={handleOpenInNewTab} className="gap-2">
+                <ExternalLink className="h-4 w-4" />
+                Open Full Page
               </Button>
             </div>
           </div>
@@ -161,11 +203,13 @@ export function WebsiteTemplateModal({
                   <button
                     key={template.id}
                     onClick={() => setSelectedTemplate(template.id)}
+                    disabled={isGenerating}
                     className={cn(
                       'relative text-left rounded-lg border-2 p-4 transition-all hover:border-primary/50',
                       isSelected
                         ? 'border-primary bg-primary/5'
-                        : 'border-border bg-muted/30 hover:bg-muted/50'
+                        : 'border-border bg-muted/30 hover:bg-muted/50',
+                      isGenerating && 'opacity-50 cursor-not-allowed'
                     )}
                   >
                     {isSelected && (
@@ -204,16 +248,30 @@ export function WebsiteTemplateModal({
             </div>
 
             <div className="flex gap-3 pt-2">
-              <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
+              <Button 
+                variant="outline" 
+                onClick={() => onOpenChange(false)} 
+                className="flex-1"
+                disabled={isGenerating}
+              >
                 Cancel
               </Button>
               <Button
-                onClick={() => setPreviewMode(true)}
-                disabled={!selectedTemplate}
+                onClick={handleGenerate}
+                disabled={!selectedTemplate || isGenerating}
                 className="flex-1"
               >
-                <Eye className="mr-2 h-4 w-4" />
-                Preview Template
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating with AI...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Generate Website
+                  </>
+                )}
               </Button>
             </div>
           </div>
