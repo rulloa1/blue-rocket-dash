@@ -6,29 +6,20 @@ import { Loader2 } from 'lucide-react';
 const WATERMARK_HTML = `
 <div id="preview-watermark" style="
   position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: linear-gradient(135deg, rgba(0,0,0,0.85) 0%, rgba(30,30,30,0.9) 100%);
-  color: white;
-  padding: 12px 20px;
-  border-radius: 8px;
+  bottom: 16px;
+  right: 16px;
+  color: rgba(0, 0, 0, 0.15);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
   z-index: 99999;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.1);
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  pointer-events: none;
+  user-select: none;
+  text-shadow: 0 0 1px rgba(255,255,255,0.5);
 ">
-  <span style="opacity: 0.7;">Preview by</span>
-  <a href="https://RoysCompany.com" target="_blank" style="
-    color: #60A5FA;
-    text-decoration: none;
-    font-weight: 600;
-  ">RoysCompany.com</a>
+  Preview by RoysCompany.com
 </div>
 `;
 
