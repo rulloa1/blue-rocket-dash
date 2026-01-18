@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -354,22 +355,33 @@ export function WebsiteTemplateModal({
                     <ExternalLink className="h-3.5 w-3.5" />
                     Open Full Preview
                   </Button>
-                  {lead.email && (
-                    <Button 
-                      size="sm"
-                      variant="default" 
-                      onClick={handleSendEmail} 
-                      disabled={isSendingEmail}
-                      className="gap-1.5 flex-1"
-                    >
-                      {isSendingEmail ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <Mail className="h-3.5 w-3.5" />
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="flex-1">
+                          <Button 
+                            size="sm"
+                            variant="default" 
+                            onClick={handleSendEmail} 
+                            disabled={isSendingEmail || !lead.email}
+                            className="gap-1.5 w-full"
+                          >
+                            {isSendingEmail ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Mail className="h-3.5 w-3.5" />
+                            )}
+                            {isSendingEmail ? 'Sending...' : 'Send to Lead'}
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      {!lead.email && (
+                        <TooltipContent>
+                          <p>Add an email address to this lead to send the preview</p>
+                        </TooltipContent>
                       )}
-                      {isSendingEmail ? 'Sending...' : 'Send to Lead'}
-                    </Button>
-                  )}
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
               </div>
             </div>
