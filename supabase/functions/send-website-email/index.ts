@@ -43,9 +43,8 @@ serve(async (req) => {
 
     const recipientName = leadName || businessName;
     const fromName = senderName || senderCompany || 'RoysCompany';
-    // Use Resend's test sender for unverified domains
-    // To use your own domain, verify it at https://resend.com/domains
-    const fromEmail = 'onboarding@resend.dev';
+    // Verified domain - can send to any recipient
+    const fromEmail = 'noreply@royscompany.com';
 
     const emailHtml = `
 <!DOCTYPE html>
