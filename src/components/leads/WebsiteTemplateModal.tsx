@@ -317,23 +317,64 @@ export function WebsiteTemplateModal({
 
         {showPreview && generatedHtml ? (
           <div className="flex-1 overflow-hidden flex flex-col space-y-3">
-            {/* Shareable URL section */}
-            {publicUrl && (
-              <div className="flex items-center gap-2 p-2.5 bg-muted/50 rounded-lg border border-border flex-shrink-0">
-                <Link className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <Input
-                  value={publicUrl}
-                  readOnly
-                  className="flex-1 bg-transparent border-0 focus-visible:ring-0 text-sm h-8"
+            {/* Compact preview + URL section */}
+            <div className="flex gap-3 flex-shrink-0">
+              {/* Mini preview thumbnail */}
+              <div className="relative w-48 h-32 rounded-lg border border-border overflow-hidden bg-white flex-shrink-0 shadow-sm">
+                <iframe
+                  srcDoc={generatedHtml}
+                  className="w-[400%] h-[400%] origin-top-left scale-[0.25] pointer-events-none"
+                  title="Website Thumbnail"
+                  sandbox="allow-scripts"
                 />
-                <Button variant="ghost" size="sm" onClick={handleCopyUrl} className="gap-1.5 h-8">
-                  <Copy className="h-3.5 w-3.5" />
-                  Copy
-                </Button>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                <span className="absolute bottom-1 right-1 text-[9px] text-white/80 bg-black/50 px-1.5 py-0.5 rounded">
+                  Preview
+                </span>
               </div>
-            )}
 
-            {/* Main content area with preview and edit panel */}
+              {/* URL and quick actions */}
+              <div className="flex-1 flex flex-col justify-between">
+                {publicUrl && (
+                  <div className="flex items-center gap-2 p-2.5 bg-muted/50 rounded-lg border border-border">
+                    <Link className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <Input
+                      value={publicUrl}
+                      readOnly
+                      className="flex-1 bg-transparent border-0 focus-visible:ring-0 text-sm h-8"
+                    />
+                    <Button variant="ghost" size="sm" onClick={handleCopyUrl} className="gap-1.5 h-8">
+                      <Copy className="h-3.5 w-3.5" />
+                      Copy
+                    </Button>
+                  </div>
+                )}
+                <div className="flex gap-2 mt-2">
+                  <Button size="sm" variant="outline" onClick={handleOpenPublicUrl} className="gap-1.5 flex-1">
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    Open Full Preview
+                  </Button>
+                  {lead.email && (
+                    <Button 
+                      size="sm"
+                      variant="default" 
+                      onClick={handleSendEmail} 
+                      disabled={isSendingEmail}
+                      className="gap-1.5 flex-1"
+                    >
+                      {isSendingEmail ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Mail className="h-3.5 w-3.5" />
+                      )}
+                      {isSendingEmail ? 'Sending...' : 'Send to Lead'}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Main content area with larger preview and edit panel */}
             <div className="flex-1 flex gap-3 min-h-0">
               {/* Preview iframe */}
               <div className={cn(
@@ -342,7 +383,7 @@ export function WebsiteTemplateModal({
               )}>
                 <iframe
                   srcDoc={generatedHtml}
-                  className="w-full h-full min-h-[400px]"
+                  className="w-full h-full min-h-[350px]"
                   title="Website Preview"
                   sandbox="allow-scripts"
                 />
@@ -464,25 +505,6 @@ export function WebsiteTemplateModal({
               <Button variant="secondary" onClick={handleDownload} className="gap-2">
                 <Download className="h-4 w-4" />
                 Download
-              </Button>
-              {lead.email && (
-                <Button 
-                  variant="secondary" 
-                  onClick={handleSendEmail} 
-                  disabled={isSendingEmail}
-                  className="gap-2"
-                >
-                  {isSendingEmail ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Mail className="h-4 w-4" />
-                  )}
-                  {isSendingEmail ? 'Sending...' : 'Send Email'}
-                </Button>
-              )}
-              <Button onClick={handleOpenPublicUrl} className="gap-2">
-                <ExternalLink className="h-4 w-4" />
-                Open Live
               </Button>
             </div>
           </div>

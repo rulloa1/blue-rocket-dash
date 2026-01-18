@@ -7,6 +7,7 @@ const corsHeaders = {
 };
 
 const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/4gM8wOeqfec58K5fbS7kc00';
+const ACTIVATE_BASE_URL = 'https://royscompany.lovable.app/activate';
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -45,6 +46,9 @@ serve(async (req) => {
     const fromName = senderName || senderCompany || 'RoysCompany';
     // Verified domain - can send to any recipient
     const fromEmail = 'noreply@royscompany.com';
+    
+    // Create activate URL with business name for post-payment redirect
+    const activateUrl = `${ACTIVATE_BASE_URL}?business=${encodeURIComponent(businessName)}`;
 
     const emailHtml = `
 <!DOCTYPE html>
@@ -121,28 +125,32 @@ serve(async (req) => {
                 </tr>
               </table>
               
-              <!-- CTA Section -->
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%); border-radius: 8px; border: 1px solid #86EFAC;">
+              <!-- CTA Section - More Prominent -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background: linear-gradient(135deg, #16A34A 0%, #15803D 100%); border-radius: 12px; overflow: hidden;">
                 <tr>
-                  <td style="padding: 25px; text-align: center;">
-                    <p style="margin: 0 0 15px; color: #166534; font-size: 16px; font-weight: 600;">
-                      Ready to make it yours?
+                  <td style="padding: 35px; text-align: center;">
+                    <p style="margin: 0 0 8px; color: rgba(255,255,255,0.9); font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">
+                      Limited Time Offer
+                    </p>
+                    <p style="margin: 0 0 20px; color: #ffffff; font-size: 22px; font-weight: 700;">
+                      Ready to Activate Your Website?
                     </p>
                     <a href="${STRIPE_PAYMENT_LINK}" target="_blank" style="
                       display: inline-block;
-                      background: linear-gradient(135deg, #16A34A 0%, #15803D 100%);
-                      color: #ffffff;
+                      background: #ffffff;
+                      color: #15803D;
                       text-decoration: none;
-                      padding: 14px 32px;
-                      border-radius: 8px;
-                      font-size: 15px;
-                      font-weight: 600;
-                      box-shadow: 0 4px 14px rgba(22, 163, 74, 0.3);
+                      padding: 18px 48px;
+                      border-radius: 50px;
+                      font-size: 18px;
+                      font-weight: 700;
+                      box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+                      transition: transform 0.2s;
                     ">
-                      💳 Get Your Full Website Now
+                      💳 Activate Now - Get Started!
                     </a>
-                    <p style="margin: 12px 0 0; color: #166534; font-size: 13px; opacity: 0.8;">
-                      Secure checkout powered by Stripe
+                    <p style="margin: 20px 0 0; color: rgba(255,255,255,0.85); font-size: 13px;">
+                      ✓ Instant activation &nbsp;•&nbsp; ✓ Secure payment &nbsp;•&nbsp; ✓ Full support
                     </p>
                   </td>
                 </tr>
