@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Palette, Sparkles, Layers, Zap, Loader2, Check, ExternalLink, Download, Copy, Link, Leaf, Cpu, Wand2, Send, RotateCcw, Mail } from 'lucide-react';
+import { Palette, Sparkles, Layers, Zap, Loader2, Check, ExternalLink, Download, Copy, Link, Leaf, Cpu, Wand2, Send, RotateCcw, Mail, Pencil, X, Eye } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -10,10 +10,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useUpdateLead } from '@/hooks/useLeads';
+import { EmailPreviewDialog } from './EmailPreviewDialog';
 
 interface Lead {
   id?: string;
@@ -29,6 +31,7 @@ interface WebsiteTemplateModalProps {
   onOpenChange: (open: boolean) => void;
   lead: Lead;
   onGenerate?: (templateId: string, html: string, publicUrl: string) => void;
+  onLeadUpdate?: () => void;
 }
 
 const WEBSITE_TEMPLATES = [
@@ -96,6 +99,7 @@ export function WebsiteTemplateModal({
   onOpenChange,
   lead,
   onGenerate,
+  onLeadUpdate,
 }: WebsiteTemplateModalProps) {
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -109,6 +113,20 @@ export function WebsiteTemplateModal({
   const [editRequest, setEditRequest] = useState('');
   const [showEditPanel, setShowEditPanel] = useState(false);
   const [editHistory, setEditHistory] = useState<string[]>([]);
+  const [showEmailPreview, setShowEmailPreview] = useState(false);
+  
+  // Email editing state
+  const [isEditingEmail, setIsEditingEmail] = useState(false);
+  const [emailInput, setEmailInput] = useState('');
+  const updateLead = useUpdateLead();
+  
+  // Track lead email locally for immediate UI updates
+  const [localLeadEmail, setLocalLeadEmail] = useState(lead.email);
+  
+  // Sync local email when lead prop changes
+  useEffect(() => {
+    setLocalLeadEmail(lead.email);
+  }, [lead.email]);
 
   // Reset state when modal closes
   useEffect(() => {
@@ -122,8 +140,43 @@ export function WebsiteTemplateModal({
       setEditRequest('');
       setShowEditPanel(false);
       setEditHistory([]);
+      setIsEditingEmail(false);
+      setEmailInput('');
+      setShowEmailPreview(false);
     }
   }, [open]);
+  
+  const handleSaveEmail = async () => {
+    if (!lead.id || !emailInput.trim()) return;
+    
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailInput.trim())) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+    
+    try {
+      await updateLead.mutateAsync({ id: lead.id, email: emailInput.trim() });
+      setLocalLeadEmail(emailInput.trim());
+      setIsEditingEmail(false);
+      setEmailInput('');
+      onLeadUpdate?.();
+      toast.success('Email updated successfully');
+    } catch (error) {
+      // Error handled by mutation
+    }
+  };
+
+  const handleStartEditEmail = () => {
+    setEmailInput(localLeadEmail || '');
+    setIsEditingEmail(true);
+  };
+
+  const handleCancelEditEmail = () => {
+    setIsEditingEmail(false);
+    setEmailInput('');
+  };
 
   const handleGenerate = async () => {
     if (!selectedTemplate) return;
@@ -241,7 +294,7 @@ export function WebsiteTemplateModal({
   };
 
   const handleSendEmail = async () => {
-    if (!publicUrl || !lead.email) {
+    if (!publicUrl || !localLeadEmail) {
       toast.error('Lead email is required to send the preview');
       return;
     }
@@ -250,7 +303,7 @@ export function WebsiteTemplateModal({
     try {
       const { data, error, response } = await supabase.functions.invoke('send-website-email', {
         body: {
-          leadEmail: lead.email,
+          leadEmail: localLeadEmail,
           leadName: lead.business_name,
           businessName: lead.business_name,
           websitePreviewUrl: publicUrl,
@@ -284,7 +337,7 @@ export function WebsiteTemplateModal({
 
       if (!data?.success) throw new Error(data?.error || 'Failed to send email');
 
-      toast.success(`Email sent to ${lead.email}!`);
+      toast.success(`Email sent to ${localLeadEmail}!`);
     } catch (error: any) {
       console.error('Error sending email:', error);
       if (error.message?.includes('RESEND_API_KEY')) {
@@ -350,38 +403,89 @@ export function WebsiteTemplateModal({
                     </Button>
                   </div>
                 )}
-                <div className="flex gap-2 mt-2">
-                  <Button size="sm" variant="outline" onClick={handleOpenPublicUrl} className="gap-1.5 flex-1">
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    Open Full Preview
-                  </Button>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="flex-1">
-                          <Button 
-                            size="sm"
-                            variant="default" 
-                            onClick={handleSendEmail} 
-                            disabled={isSendingEmail || !lead.email}
-                            className="gap-1.5 w-full"
-                          >
-                            {isSendingEmail ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              <Mail className="h-3.5 w-3.5" />
-                            )}
-                            {isSendingEmail ? 'Sending...' : 'Send to Lead'}
-                          </Button>
-                        </span>
-                      </TooltipTrigger>
-                      {!lead.email && (
-                        <TooltipContent>
-                          <p>Add an email address to this lead to send the preview</p>
-                        </TooltipContent>
-                      )}
-                    </Tooltip>
-                  </TooltipProvider>
+                {/* Email editing and Send to Lead section */}
+                <div className="space-y-2 mt-2">
+                  {/* Email display/edit row */}
+                  {isEditingEmail ? (
+                    <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg border border-border">
+                      <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <Input
+                        type="email"
+                        value={emailInput}
+                        onChange={(e) => setEmailInput(e.target.value)}
+                        placeholder="Enter lead email..."
+                        className="flex-1 bg-transparent border-0 focus-visible:ring-0 text-sm h-8"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleSaveEmail();
+                          if (e.key === 'Escape') handleCancelEditEmail();
+                        }}
+                      />
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={handleSaveEmail}
+                        disabled={updateLead.isPending || !emailInput.trim()}
+                        className="h-8 px-2"
+                      >
+                        {updateLead.isPending ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Check className="h-3.5 w-3.5 text-green-500" />
+                        )}
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={handleCancelEditEmail}
+                        disabled={updateLead.isPending}
+                        className="h-8 px-2"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ) : localLeadEmail ? (
+                    <div className="flex items-center gap-2 p-2 bg-muted/30 rounded-lg text-sm text-muted-foreground">
+                      <Mail className="h-3.5 w-3.5" />
+                      <span className="flex-1 truncate">{localLeadEmail}</span>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={handleStartEditEmail}
+                        className="h-7 px-2 text-xs"
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleStartEditEmail}
+                      className="w-full gap-1.5 text-muted-foreground"
+                    >
+                      <Mail className="h-3.5 w-3.5" />
+                      Add email to send preview
+                    </Button>
+                  )}
+                  
+                  {/* Action buttons */}
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={handleOpenPublicUrl} className="gap-1.5 flex-1">
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      Open Full Preview
+                    </Button>
+                    <Button 
+                      size="sm"
+                      variant="default" 
+                      onClick={() => setShowEmailPreview(true)} 
+                      disabled={!localLeadEmail}
+                      className="gap-1.5 flex-1"
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                      Preview & Send Email
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -607,6 +711,18 @@ export function WebsiteTemplateModal({
             </div>
           </div>
         )}
+
+        {/* Email Preview Dialog */}
+        <EmailPreviewDialog
+          open={showEmailPreview}
+          onOpenChange={setShowEmailPreview}
+          businessName={lead.business_name}
+          recipientName={lead.business_name}
+          recipientEmail={localLeadEmail || ''}
+          websitePreviewUrl={publicUrl || ''}
+          onSend={handleSendEmail}
+          isSending={isSendingEmail}
+        />
       </DialogContent>
     </Dialog>
   );
