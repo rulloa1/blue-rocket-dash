@@ -47,19 +47,23 @@ export default function PublicWebsite() {
       }
 
       try {
+        // Use RPC function to access website by public_id
+        // This prevents exposing user_id through direct table access
         const { data, error: fetchError } = await supabase
-          .from('generated_websites')
-          .select('html_content')
-          .eq('public_id', publicId)
-          .single();
+          .rpc('get_website_by_public_id', { p_public_id: publicId });
 
-        if (fetchError || !data) {
+        if (fetchError) {
           console.error('Error fetching website:', fetchError);
           setError('Website not found');
           return;
         }
 
-        setHtml(data.html_content);
+        if (!data || data.length === 0) {
+          setError('Website not found');
+          return;
+        }
+
+        setHtml(data[0].html_content);
       } catch (err) {
         console.error('Error:', err);
         setError('Failed to load website');

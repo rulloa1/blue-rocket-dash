@@ -809,6 +809,18 @@ export type Database = {
     }
     Functions: {
       ensure_user_settings: { Args: never; Returns: string }
+      get_website_by_public_id: {
+        Args: { p_public_id: string }
+        Returns: {
+          business_name: string
+          created_at: string
+          html_content: string
+          id: string
+          public_id: string
+          template_id: string
+          updated_at: string
+        }[]
+      }
     }
     Enums: {
       deal_stage:
