@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Palette, Sparkles, Layers, Zap, Loader2, Check, ExternalLink, Download, Copy, Link, Leaf, Cpu, Wand2, Send, RotateCcw, Mail, Pencil, X } from 'lucide-react';
+import { Palette, Sparkles, Layers, Zap, Loader2, Check, ExternalLink, Download, Copy, Link, Leaf, Cpu, Wand2, Send, RotateCcw, Mail, Pencil, X, Eye } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useUpdateLead } from '@/hooks/useLeads';
+import { EmailPreviewDialog } from './EmailPreviewDialog';
 
 interface Lead {
   id?: string;
@@ -112,6 +113,7 @@ export function WebsiteTemplateModal({
   const [editRequest, setEditRequest] = useState('');
   const [showEditPanel, setShowEditPanel] = useState(false);
   const [editHistory, setEditHistory] = useState<string[]>([]);
+  const [showEmailPreview, setShowEmailPreview] = useState(false);
   
   // Email editing state
   const [isEditingEmail, setIsEditingEmail] = useState(false);
@@ -140,6 +142,7 @@ export function WebsiteTemplateModal({
       setEditHistory([]);
       setIsEditingEmail(false);
       setEmailInput('');
+      setShowEmailPreview(false);
     }
   }, [open]);
   
@@ -475,16 +478,12 @@ export function WebsiteTemplateModal({
                     <Button 
                       size="sm"
                       variant="default" 
-                      onClick={handleSendEmail} 
-                      disabled={isSendingEmail || !localLeadEmail}
+                      onClick={() => setShowEmailPreview(true)} 
+                      disabled={!localLeadEmail}
                       className="gap-1.5 flex-1"
                     >
-                      {isSendingEmail ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <Mail className="h-3.5 w-3.5" />
-                      )}
-                      {isSendingEmail ? 'Sending...' : 'Send to Lead'}
+                      <Eye className="h-3.5 w-3.5" />
+                      Preview & Send Email
                     </Button>
                   </div>
                 </div>
@@ -712,6 +711,18 @@ export function WebsiteTemplateModal({
             </div>
           </div>
         )}
+
+        {/* Email Preview Dialog */}
+        <EmailPreviewDialog
+          open={showEmailPreview}
+          onOpenChange={setShowEmailPreview}
+          businessName={lead.business_name}
+          recipientName={lead.business_name}
+          recipientEmail={localLeadEmail || ''}
+          websitePreviewUrl={publicUrl || ''}
+          onSend={handleSendEmail}
+          isSending={isSendingEmail}
+        />
       </DialogContent>
     </Dialog>
   );
