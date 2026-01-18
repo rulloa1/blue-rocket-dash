@@ -8,20 +8,28 @@ import { toast } from 'sonner';
 const WATERMARK_HTML = `
 <div id="preview-watermark" style="
   position: fixed;
-  bottom: 16px;
-  right: 16px;
-  color: rgba(0, 0, 0, 0.15);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  z-index: 99999;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   pointer-events: none;
-  user-select: none;
-  text-shadow: 0 0 1px rgba(255,255,255,0.5);
+  z-index: 99999;
+  overflow: hidden;
 ">
-  Preview by RoysCompany.com
+  <div style="
+    transform: rotate(-45deg);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 120px;
+    font-weight: 900;
+    letter-spacing: 20px;
+    text-transform: uppercase;
+    color: rgba(0, 0, 0, 0.06);
+    white-space: nowrap;
+    user-select: none;
+  ">PREVIEW</div>
 </div>
 `;
 
