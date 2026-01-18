@@ -11,3 +11,9 @@ verify_jwt = false
 
 [functions.send-website-email]
 verify_jwt = false
+
+[functions.create-website-checkout]
+verify_jwt = false
+
+[functions.stripe-website-webhook]
+verify_jwt = false

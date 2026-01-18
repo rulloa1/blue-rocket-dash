@@ -1,7 +1,9 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Sparkles } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 const WATERMARK_HTML = `
 <div id="preview-watermark" style="
@@ -23,11 +25,20 @@ const WATERMARK_HTML = `
 </div>
 `;
 
+interface WebsiteData {
+  html_content: string;
+  business_name: string;
+  activated_at: string | null;
+}
+
 export default function PublicWebsite() {
   const { publicId } = useParams<{ publicId: string }>();
-  const [html, setHtml] = useState<string | null>(null);
+  const [websiteData, setWebsiteData] = useState<WebsiteData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isActivated = websiteData?.activated_at != null;
 
   useEffect(() => {
     async function fetchWebsite() {
@@ -38,8 +49,6 @@ export default function PublicWebsite() {
       }
 
       try {
-        // Use RPC function to access website by public_id
-        // This prevents exposing user_id through direct table access
         const { data, error: fetchError } = await supabase
           .rpc('get_website_by_public_id', { p_public_id: publicId });
 
@@ -54,7 +63,11 @@ export default function PublicWebsite() {
           return;
         }
 
-        setHtml(data[0].html_content);
+        setWebsiteData({
+          html_content: data[0].html_content,
+          business_name: data[0].business_name,
+          activated_at: data[0].activated_at,
+        });
       } catch (err) {
         console.error('Error:', err);
         setError('Failed to load website');
@@ -66,16 +79,54 @@ export default function PublicWebsite() {
     fetchWebsite();
   }, [publicId]);
 
-  // Inject watermark if not already present
-  const htmlWithWatermark = useMemo(() => {
-    if (!html) return '';
+  // Inject watermark only if NOT activated
+  const finalHtml = useMemo(() => {
+    if (!websiteData?.html_content) return '';
+    
+    // If activated, return original HTML without watermark
+    if (isActivated) {
+      return websiteData.html_content;
+    }
+    
+    // If not activated, add watermark
+    const html = websiteData.html_content;
     if (html.includes('id="preview-watermark"')) return html;
     
     if (html.toLowerCase().includes('</body>')) {
       return html.replace(/<\/body>/i, `${WATERMARK_HTML}\n</body>`);
     }
     return html + WATERMARK_HTML;
-  }, [html]);
+  }, [websiteData, isActivated]);
+
+  const handleActivate = async () => {
+    if (!publicId) return;
+    
+    setCheckoutLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-website-checkout', {
+        body: {
+          publicId,
+          businessName: websiteData?.business_name || '',
+          origin: window.location.origin,
+        },
+      });
+
+      if (error) {
+        console.error('Checkout error:', error);
+        toast.error('Failed to start checkout');
+        return;
+      }
+
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      toast.error('Something went wrong');
+    } finally {
+      setCheckoutLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -94,13 +145,39 @@ export default function PublicWebsite() {
     );
   }
 
-  // Render the full HTML page
   return (
-    <iframe
-      srcDoc={htmlWithWatermark}
-      className="w-full h-screen border-0"
-      title="Website"
-      sandbox="allow-scripts allow-same-origin"
-    />
+    <div className="relative w-full h-screen">
+      {/* Activate Banner - only show if NOT activated */}
+      {!isActivated && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 px-4 flex items-center justify-center gap-4 shadow-lg">
+          <span className="text-sm font-medium">
+            ✨ Like this website? Activate it to remove the watermark and go live!
+          </span>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={handleActivate}
+            disabled={checkoutLoading}
+            className="bg-white text-blue-600 hover:bg-blue-50 gap-1.5"
+          >
+            {checkoutLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Sparkles className="h-4 w-4" />
+            )}
+            Activate Now
+          </Button>
+        </div>
+      )}
+      
+      {/* Website iframe */}
+      <iframe
+        srcDoc={finalHtml}
+        className={`w-full h-full border-0 ${!isActivated ? 'pt-11' : ''}`}
+        title="Website"
+        sandbox="allow-scripts allow-same-origin"
+        style={{ height: !isActivated ? 'calc(100vh - 44px)' : '100vh' }}
+      />
+    </div>
   );
 }
