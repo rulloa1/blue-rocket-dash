@@ -138,9 +138,62 @@ serve(async (req) => {
                       Hi ${recipientName},
                     </p>
                     
-                    <p style="margin: 0 0 30px; color: #a3a3a3; font-size: 16px; line-height: 1.7;">
+                    <p style="margin: 0 0 25px; color: #a3a3a3; font-size: 16px; line-height: 1.7;">
                       We've crafted a <span style="color: #daa520; font-weight: 600;">custom website preview</span> exclusively for your business. See how your online presence can elevate your brand and attract more customers.
                     </p>
+                    
+                    <!-- Website Preview Window -->
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom: 25px;">
+                      <tr>
+                        <td>
+                          <!-- Browser Window Frame -->
+                          <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #2a2a2a; border-radius: 12px; overflow: hidden; border: 1px solid #3a3a3a;">
+                            <!-- Browser Top Bar -->
+                            <tr>
+                              <td style="padding: 10px 15px; background-color: #1f1f1f; border-bottom: 1px solid #3a3a3a;">
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                  <tr>
+                                    <td width="60">
+                                      <!-- Traffic Light Buttons -->
+                                      <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background-color: #ff5f56; margin-right: 6px;"></span>
+                                      <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background-color: #ffbd2e; margin-right: 6px;"></span>
+                                      <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background-color: #27ca40;"></span>
+                                    </td>
+                                    <td style="text-align: center;">
+                                      <!-- URL Bar -->
+                                      <div style="display: inline-block; background-color: #2a2a2a; border-radius: 6px; padding: 5px 20px; font-size: 11px; color: #888888;">
+                                        🔒 ${businessName.toLowerCase().replace(/\s+/g, '')}.com
+                                      </div>
+                                    </td>
+                                    <td width="60"></td>
+                                  </tr>
+                                </table>
+                              </td>
+                            </tr>
+                            <!-- Website Preview Content -->
+                            <tr>
+                              <td style="padding: 25px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); text-align: center; min-height: 180px;">
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                  <tr>
+                                    <td style="padding: 30px 20px;">
+                                      <p style="margin: 0 0 8px; font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">
+                                        ${businessName}
+                                      </p>
+                                      <p style="margin: 0 0 20px; font-size: 14px; color: #b8b8b8;">
+                                        Your professional website is ready
+                                      </p>
+                                      <div style="display: inline-block; background: linear-gradient(90deg, #b8860b, #daa520); padding: 10px 28px; border-radius: 6px;">
+                                        <span style="color: #ffffff; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Preview Ready</span>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
                     
                     <!-- Preview Button -->
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
