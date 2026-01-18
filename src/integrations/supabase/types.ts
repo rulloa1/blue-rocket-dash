@@ -188,34 +188,40 @@ export type Database = {
       }
       generated_websites: {
         Row: {
+          activated_at: string | null
           business_name: string
           created_at: string
           html_content: string
           id: string
           lead_id: string | null
           public_id: string
+          stripe_session_id: string | null
           template_id: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          activated_at?: string | null
           business_name: string
           created_at?: string
           html_content: string
           id?: string
           lead_id?: string | null
           public_id?: string
+          stripe_session_id?: string | null
           template_id: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          activated_at?: string | null
           business_name?: string
           created_at?: string
           html_content?: string
           id?: string
           lead_id?: string | null
           public_id?: string
+          stripe_session_id?: string | null
           template_id?: string
           updated_at?: string
           user_id?: string
@@ -812,6 +818,7 @@ export type Database = {
       get_website_by_public_id: {
         Args: { p_public_id: string }
         Returns: {
+          activated_at: string
           business_name: string
           created_at: string
           html_content: string
