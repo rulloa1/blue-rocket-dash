@@ -247,7 +247,7 @@ export function WebsiteTemplateModal({
 
     setIsSendingEmail(true);
     try {
-      const { data, error } = await supabase.functions.invoke('send-website-email', {
+      const { data, error, response } = await supabase.functions.invoke('send-website-email', {
         body: {
           leadEmail: lead.email,
           leadName: lead.business_name,
@@ -257,7 +257,30 @@ export function WebsiteTemplateModal({
         headers: lead.id ? { 'x-lead-id': lead.id } : undefined,
       });
 
-      if (error) throw error;
+      if (error) {
+        let body: any = null;
+        if (response) {
+          try {
+            body = await response.clone().json();
+          } catch {
+            try {
+              body = { error: await response.clone().text() };
+            } catch {
+              body = null;
+            }
+          }
+        }
+
+        if (body?.errorCode === 'RESEND_TESTING_ONLY' && body?.allowedEmail) {
+          toast.error('Email sending is in testing mode.', {
+            description: `You can only send test emails to ${body.allowedEmail}. Verify a domain in Resend to email other recipients.`,
+          });
+          return;
+        }
+
+        throw new Error(body?.error || error.message || 'Failed to send email');
+      }
+
       if (!data?.success) throw new Error(data?.error || 'Failed to send email');
 
       toast.success(`Email sent to ${lead.email}!`);

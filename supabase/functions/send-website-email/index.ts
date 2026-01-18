@@ -17,7 +17,7 @@ serve(async (req) => {
     const { leadEmail, leadName, businessName, websitePreviewUrl, senderName, senderEmail, senderCompany } = await req.json();
 
     if (!leadEmail || !businessName || !websitePreviewUrl) {
-      throw new Error("Missing required fields: leadEmail, businessName, websitePreviewUrl");
+      return new Response(JSON.stringify({ success: false, error: "Missing required fields: leadEmail, businessName, websitePreviewUrl" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
@@ -27,7 +27,7 @@ serve(async (req) => {
 
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      throw new Error("Authorization header is required");
+      return new Response(JSON.stringify({ success: false, error: "Authorization header is required" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -38,7 +38,7 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
     if (authError || !user) {
-      throw new Error("Invalid authentication token");
+      return new Response(JSON.stringify({ success: false, error: "Invalid authentication token" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const recipientName = leadName || businessName;
@@ -183,7 +183,7 @@ serve(async (req) => {
 
     console.log('Sending email to:', leadEmail);
 
-    const response = await fetch('https://api.resend.com/emails', {
+    const resendResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${RESEND_API_KEY}`,
@@ -197,13 +197,19 @@ serve(async (req) => {
       }),
     });
 
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error('Resend API error:', errorData);
-      throw new Error(`Failed to send email: ${errorData}`);
+    const resendText = await resendResponse.text();
+    let resendJson: any = null;
+    try { resendJson = JSON.parse(resendText); } catch { /* ignore */ }
+
+    if (!resendResponse.ok) {
+      const resendMessage = resendJson?.message || resendJson?.error || resendText || 'Failed to send email';
+      const match = String(resendMessage).match(/own email address \(([^)]+)\)/i);
+      const allowedEmail = match?.[1] ?? null;
+      console.error('Resend API error:', resendJson ?? resendText);
+      return new Response(JSON.stringify({ success: false, error: resendMessage, errorCode: allowedEmail ? 'RESEND_TESTING_ONLY' : 'RESEND_ERROR', allowedEmail }), { status: resendResponse.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const result = await response.json();
+    const result = resendJson || {};
     console.log('Email sent successfully:', result);
 
     // Log the activity
