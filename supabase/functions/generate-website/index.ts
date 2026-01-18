@@ -12,38 +12,51 @@ const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/4gM8wOeqfec58K5fbS7kc00';
 const WATERMARK_HTML = `
 <div id="preview-watermark" style="
   position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: linear-gradient(135deg, rgba(0,0,0,0.85) 0%, rgba(30,30,30,0.9) 100%);
+  bottom: 24px;
+  right: 24px;
+  background: rgba(15, 23, 42, 0.9);
   color: white;
-  padding: 12px 20px;
-  border-radius: 8px;
+  padding: 12px 24px;
+  border-radius: 50px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   z-index: 99999;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  backdrop-filter: blur(12px);
   border: 1px solid rgba(255,255,255,0.1);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  transition: all 0.3s ease;
+  cursor: pointer;
 ">
-  <span style="opacity: 0.7;">Preview by</span>
+  <span style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; display: inline-block; box-shadow: 0 0 10px #22c55e;"></span>
+  <span>Live Preview Mode</span>
+  <div style="height: 16px; width: 1px; background: rgba(255,255,255,0.2); margin: 0 4px;"></div>
   <a href="https://RoysCompany.com" target="_blank" style="
     color: #60A5FA;
     text-decoration: none;
     font-weight: 600;
-  ">RoysCompany.com</a>
+    font-size: 13px;
+    letter-spacing: 0.5px;
+  ">ROYS COMPANY</a>
 </div>
+<style>
+  #preview-watermark:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+    background: rgba(15, 23, 42, 0.95);
+  }
+</style>
 `;
 
 const TEMPLATE_STYLES = {
   modern: {
     name: 'Modern',
-    description: 'Clean, contemporary design with bold typography and smooth gradients',
+    description: 'Award-winning contemporary design with clean lines, bold typography, and sophisticated use of negative space.',
     colors: {
-      primary: '#3B82F6',
+      primary: '#2563EB',
       secondary: '#1E40AF', 
       accent: '#06B6D4',
       background: '#FFFFFF',
@@ -51,89 +64,89 @@ const TEMPLATE_STYLES = {
       text: '#0F172A',
       textMuted: '#64748B',
     },
-    fonts: "font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;",
-    heroStyle: 'gradient background with floating geometric shapes',
-    features: ['Smooth hover animations', 'Gradient CTAs', 'Card-based layouts', 'Subtle shadows'],
+    fonts: "font-family: 'Inter', system-ui, -apple-system, sans-serif;",
+    heroStyle: 'immersive gradient background with glassmorphism elements and floating geometric shapes',
+    features: ['Glassmorphism effects', 'Smooth scroll reveal', 'Modern grid layouts', 'Micro-interactions'],
   },
   classic: {
     name: 'Classic',
-    description: 'Timeless elegance with refined typography and sophisticated color palette',
+    description: 'Timeless luxury and elegance with refined serif typography and a sophisticated gold-accented palette.',
     colors: {
-      primary: '#1E3A5F',
-      secondary: '#2C5282',
-      accent: '#C9A227',
+      primary: '#1A202C',
+      secondary: '#2D3748',
+      accent: '#D69E2E',
       background: '#FFFEF8',
-      surface: '#F5F0E6',
-      text: '#1A202C',
-      textMuted: '#4A5568',
+      surface: '#FDFBF7',
+      text: '#2D3748',
+      textMuted: '#718096',
     },
-    fonts: "font-family: 'Georgia', 'Times New Roman', serif;",
-    heroStyle: 'elegant overlay with refined borders and gold accents',
-    features: ['Serif typography for headings', 'Elegant gold accents', 'Refined spacing', 'Classic borders'],
+    fonts: "font-family: 'Playfair Display', 'Georgia', serif;",
+    heroStyle: 'luxurious minimal layout with elegant serif typography and gold accents',
+    features: ['Premium serif fonts', 'Gold foil effects', 'Generous whitespace', 'Traditional elegance'],
   },
   minimal: {
     name: 'Minimal',
-    description: 'Ultra-clean design focused on content with maximum whitespace',
+    description: 'Ultra-clean, content-focused design with maximum whitespace and Swiss-style typography.',
     colors: {
-      primary: '#18181B',
-      secondary: '#3F3F46',
-      accent: '#18181B',
+      primary: '#000000',
+      secondary: '#333333',
+      accent: '#000000',
       background: '#FFFFFF',
       surface: '#FAFAFA',
-      text: '#09090B',
-      textMuted: '#71717A',
+      text: '#171717',
+      textMuted: '#737373',
     },
-    fonts: "font-family: 'Helvetica Neue', Arial, sans-serif;",
-    heroStyle: 'clean typography-focused hero with minimal elements',
-    features: ['Maximum whitespace', 'No decorative elements', 'Pure typography', 'Monochromatic palette'],
+    fonts: "font-family: 'Helvetica Neue', 'Arial', sans-serif;",
+    heroStyle: 'bold typography-driven hero with absolute minimalism',
+    features: ['Radical whitespace', 'Grid systems', 'Swiss typography', 'High contrast'],
   },
   bold: {
     name: 'Bold',
-    description: 'High-impact design with vibrant gradients and dynamic elements',
+    description: 'High-impact, vibrant design with dark mode aesthetic and dynamic gradients.',
     colors: {
-      primary: '#7C3AED',
-      secondary: '#DB2777',
+      primary: '#8B5CF6',
+      secondary: '#EC4899',
       accent: '#F59E0B',
-      background: '#0F0F23',
-      surface: '#1A1A2E',
-      text: '#FFFFFF',
-      textMuted: '#A1A1AA',
+      background: '#0F172A',
+      surface: '#1E293B',
+      text: '#F8FAFC',
+      textMuted: '#94A3B8',
     },
-    fonts: "font-family: 'Poppins', 'Montserrat', sans-serif;",
-    heroStyle: 'dark theme with vibrant gradient accents and animated elements',
-    features: ['Dark mode by default', 'Vibrant gradient buttons', 'Dynamic geometric shapes', 'High contrast'],
+    fonts: "font-family: 'Space Grotesk', 'Poppins', sans-serif;",
+    heroStyle: 'deep dark background with vibrant glowing gradients and 3D elements',
+    features: ['Dark mode aesthetic', 'Neon glows', 'Bento grid layout', 'Dynamic animations'],
   },
   nature: {
     name: 'Nature',
-    description: 'Organic, earthy design inspired by natural elements',
+    description: 'Organic, serene design inspired by natural elements with soft textures and earthy tones.',
     colors: {
-      primary: '#166534',
-      secondary: '#15803D',
-      accent: '#CA8A04',
-      background: '#FEFEF8',
+      primary: '#059669',
+      secondary: '#047857',
+      accent: '#D97706',
+      background: '#FDFCF8',
       surface: '#F0FDF4',
-      text: '#14532D',
-      textMuted: '#4D7C0F',
+      text: '#1C1917',
+      textMuted: '#57534E',
     },
-    fonts: "font-family: 'Nunito', 'Quicksand', sans-serif;",
-    heroStyle: 'organic shapes with natural textures and earthy tones',
-    features: ['Organic border radius', 'Natural color palette', 'Leaf/nature icons', 'Soft transitions'],
+    fonts: "font-family: 'Outfit', 'Nunito', sans-serif;",
+    heroStyle: 'soft organic shapes with natural imagery and calming colors',
+    features: ['Organic border radius', 'Natural textures', 'Soft shadows', 'Floating elements'],
   },
   tech: {
     name: 'Tech',
-    description: 'Futuristic, cutting-edge design for technology-focused businesses',
+    description: 'Futuristic, cutting-edge design for technology leaders with cyber aesthetics.',
     colors: {
-      primary: '#00D9FF',
-      secondary: '#0099FF',
-      accent: '#FF00FF',
-      background: '#0A0A0F',
-      surface: '#12121A',
-      text: '#E4E4E7',
-      textMuted: '#71717A',
+      primary: '#0EA5E9',
+      secondary: '#0284C7',
+      accent: '#6366F1',
+      background: '#0B1120',
+      surface: '#151F32',
+      text: '#F1F5F9',
+      textMuted: '#94A3B8',
     },
-    fonts: "font-family: 'JetBrains Mono', 'Fira Code', monospace;",
-    heroStyle: 'dark cyber aesthetic with neon accents and grid patterns',
-    features: ['Neon glow effects', 'Grid background patterns', 'Monospace fonts', 'Futuristic animations'],
+    fonts: "font-family: 'JetBrains Mono', 'Inter', sans-serif;",
+    heroStyle: 'technical grid background with cybernetic accents and glowing lines',
+    features: ['Cybernetic effects', 'Grid backgrounds', 'Monospace details', 'Tech-focused layout'],
   },
 };
 
@@ -197,7 +210,7 @@ const generateIndustryContent = (industry: string, businessName: string) => {
   return industryContent.default;
 };
 
-serve(async (req) => {
+serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
