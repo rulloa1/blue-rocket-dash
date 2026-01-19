@@ -294,22 +294,35 @@ function UploadTemplateDialog({ onClose }: { onClose: () => void }) {
 
             // Try to save
             try {
-                localStorage.setItem('local_templates', JSON.stringify([newTemplate, ...existing]));
+                const json = JSON.stringify([newTemplate, ...existing]);
+                if (json.length > 4500000) { // ~4.5MB safety limit
+                    throw new Error("Template too large for browser storage (>4.5MB). Please use smaller images or fix the database connection.");
+                }
+                localStorage.setItem('local_templates', json);
             } catch (storageError: any) {
                 // If quota exceeded, try removing the oldest local template
                 if (storageError.name === 'QuotaExceededError' || storageError.message?.includes('exceeded')) {
                     if (existing.length > 0) {
-                        // Remove last 2 to be safe
-                        const reduced = existing.slice(0, Math.max(0, existing.length - 2));
-                        localStorage.setItem('local_templates', JSON.stringify([newTemplate, ...reduced]));
-                        toast.info("Local storage full. Removed oldest templates to make space.");
-                        return { success: true };
+                        // Try removing oldest items until it fits
+                        let reduced = [...existing];
+                        while (reduced.length > 0) {
+                            reduced.pop(); // Remove last (oldest)
+                            try {
+                                const newJson = JSON.stringify([newTemplate, ...reduced]);
+                                localStorage.setItem('local_templates', newJson);
+                                toast.info(`Storage full. Removed older templates to save "${newTemplate.name}".`);
+                                return { success: true };
+                            } catch (e) {
+                                // Continue loop
+                            }
+                        }
                     }
+                    throw new Error("Storage full. Template is too large even after clearing old items.");
                 }
                 throw storageError;
             }
             return { success: true };
-        } catch (e) {
+        } catch (e: any) {
             console.error("Local storage failed", e);
             return { success: false, error: e };
         }
@@ -331,8 +344,8 @@ function UploadTemplateDialog({ onClose }: { onClose: () => void }) {
                  queryClient.invalidateQueries({ queryKey: ['website-templates'] });
                  onClose();
              } else {
-                 // Throw a combined error
-                 throw new Error(`Database error: ${error.message}. Local save failed: ${localResult.error?.message || 'Unknown storage error'}`);
+                 // Show the LOCAL error if local save failed, because that's the fallback
+                 toast.error(`Offline save failed: ${localResult.error?.message || 'Storage error'}`);
              }
         } else {
             toast.success('Template uploaded successfully');
@@ -351,6 +364,9 @@ function UploadTemplateDialog({ onClose }: { onClose: () => void }) {
                 queryClient.invalidateQueries({ queryKey: ['website-templates'] });
                 onClose();
                 return;
+            } else {
+                 toast.error(`Offline save failed: ${localResult.error?.message || 'Storage error'}`);
+                 return;
             }
         }
         
