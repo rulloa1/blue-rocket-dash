@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Palette, Sparkles, Layers, Zap, Loader2, Check, ExternalLink, Download, Copy, Link, Leaf, Cpu, Wand2, Send, RotateCcw, Mail, Pencil, X, Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { Palette, Sparkles, Layers, Zap, Loader2, Check, ExternalLink, Download, Copy, Link, Leaf, Cpu, Wand2, Send, RotateCcw, Mail, Pencil, X, Eye, Plus, LayoutTemplate } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -143,9 +145,36 @@ export function WebsiteTemplateModal({
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [emailInput, setEmailInput] = useState('');
   const updateLead = useUpdateLead();
+  const navigate = useNavigate();
   
   // Track lead email locally for immediate UI updates
   const [localLeadEmail, setLocalLeadEmail] = useState(lead.email);
+
+  // Fetch custom templates
+  const { data: customTemplates = [] } = useQuery({
+    queryKey: ['website-templates'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('website_templates')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data.map(t => ({
+        id: t.id, // UUID
+        name: t.name,
+        description: t.description || 'Custom uploaded template',
+        icon: LayoutTemplate,
+        preview: 'bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300', // Default placeholder
+        features: ['Custom Design', 'Uploaded'],
+        isCustom: true
+      }));
+    },
+  });
+
+  // Merge hardcoded and custom templates
+  const allTemplates = [...customTemplates, ...WEBSITE_TEMPLATES];
   
   // Sync local email when lead prop changes
   useEffect(() => {
@@ -216,6 +245,12 @@ export function WebsiteTemplateModal({
           phone: lead.phone,
           website: lead.website,
           leadId: lead.id,
+          // If the ID is a UUID (custom template), pass it as preferred_template
+          // If it's a hardcoded ID (e.g. 'modern'), we pass it but the backend might ignore it or use default
+          // Actually, we should probably update the backend to handle legacy IDs if needed, 
+          // but for now, passing the ID is fine. 
+          // We can rename the field in the payload to match what the backend expects:
+          preferred_template: selectedTemplate, 
         },
       });
 
@@ -650,8 +685,14 @@ export function WebsiteTemplateModal({
           </div>
         ) : (
           <div className="space-y-4">
+            <div className="flex justify-end">
+                <Button variant="outline" size="sm" onClick={() => navigate('/templates')}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Upload / Manage Templates
+                </Button>
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {WEBSITE_TEMPLATES.map((template) => {
+              {allTemplates.map((template) => {
                 const Icon = template.icon;
                 const isSelected = selectedTemplate === template.id;
 
