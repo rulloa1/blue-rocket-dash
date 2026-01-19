@@ -15,6 +15,7 @@ import {
   Edit,
   UserPlus,
   LayoutTemplate,
+  RefreshCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -32,6 +33,8 @@ import {
   useAddLeadNote,
   LeadStatus,
 } from '@/hooks/useLeads';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface LeadDrawerProps {
   leadId: string | null;
@@ -64,25 +67,48 @@ export function LeadDrawer({ leadId, open, onOpenChange }: LeadDrawerProps) {
     setNewNote('');
   };
 
+  const handleRefreshScore = async () => {
+    if (!leadId) return;
+    setIsScoring(true);
+    try {
+        const { data, error } = await supabase.functions.invoke('qualify-lead', {
+            body: { leadId }
+        });
+
+        if (error) throw error;
+
+        if (data.success) {
+            toast.success(data.message);
+            queryClient.invalidateQueries({ queryKey: ['lead', leadId] });
+            queryClient.invalidateQueries({ queryKey: ['leads'] });
+        }
+    } catch (error) {
+        console.error(error);
+        toast.error('Failed to update score');
+    } finally {
+        setIsScoring(false);
+    }
+  };
+
   const handleSendToN8n = async () => {
     if (!lead) return;
     setIsSendingN8n(true);
     try {
-      const { data, error } = await supabase.functions.invoke('n8n-proxy', {
-        body: { 
-          action: 'process_lead',
-          payload: lead
-        }
-      });
+        const { data, error } = await supabase.functions.invoke('n8n-proxy', {
+            body: { 
+                action: 'process_lead',
+                payload: lead
+            }
+        });
 
-      if (error) throw error;
+        if (error) throw error;
 
-      toast.success(data.message || 'Sent to n8n successfully');
+        toast.success(data.message || 'Sent to n8n successfully');
     } catch (error) {
-      console.error(error);
-      toast.error('Failed to send to n8n: ' + (error as any).message);
+        console.error(error);
+        toast.error('Failed to send to n8n: ' + (error as any).message);
     } finally {
-      setIsSendingN8n(false);
+        setIsSendingN8n(false);
     }
   };
 
@@ -122,20 +148,6 @@ export function LeadDrawer({ leadId, open, onOpenChange }: LeadDrawerProps) {
                     )}
                   </div>
                   <LeadStatusBadge status={lead.status as LeadStatus} />
-                </div>
-                <div className="flex items-center gap-4">
-                  <AIScoreIndicator score={lead.ai_score} />
-                  <span className="text-xs text-muted-foreground">AI Score</span>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-6 w-6 ml-auto" 
-                    onClick={handleRefreshScore}
-                    disabled={isScoring}
-                    title="Recalculate Score"
-                  >
-                    <RefreshCw className={`h-3 w-3 ${isScoring ? 'animate-spin' : ''}`} />
-                  </Button>
                 </div>
               </div>
 
@@ -200,9 +212,17 @@ export function LeadDrawer({ leadId, open, onOpenChange }: LeadDrawerProps) {
               {/* Actions */}
               <div className="space-y-3">
                 <div className="flex gap-3">
-                  <Button className="flex-1 gap-2">
-                    <Send className="h-4 w-4" />
-                    Send to Outreach
+                  <Button 
+                    className="flex-1 gap-2"
+                    onClick={handleSendToN8n}
+                    disabled={isSendingN8n}
+                  >
+                    {isSendingN8n ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                        <Send className="h-4 w-4" />
+                    )}
+                    Send to n8n
                   </Button>
                   <Button variant="secondary" className="flex-1 gap-2">
                     <FileText className="h-4 w-4" />

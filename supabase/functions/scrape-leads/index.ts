@@ -72,6 +72,30 @@ serve(async (req) => {
       throw error;
     }
 
+    // TRIGGER ENRICHMENT AND MARKETING MATERIAL CREATION
+    try {
+        console.log("Triggering enrichment for new leads...");
+        const N8N_WEBHOOK_URL = Deno.env.get("N8N_WEBHOOK_URL");
+        const N8N_TOKEN = Deno.env.get("N8N_BEARER_TOKEN");
+        
+        if (N8N_WEBHOOK_URL) {
+             await fetch(N8N_WEBHOOK_URL, {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": N8N_TOKEN ? `Bearer ${N8N_TOKEN}` : ""
+                },
+                body: JSON.stringify({ 
+                    action: "enrich_and_create_marketing",
+                    leads: data 
+                })
+            });
+        }
+    } catch (err) {
+        console.error("Failed to trigger enrichment webhook:", err);
+        // Don't fail the main request if webhook fails
+    }
+
     return new Response(
       JSON.stringify({
         success: true,

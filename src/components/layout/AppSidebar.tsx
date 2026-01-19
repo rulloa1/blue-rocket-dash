@@ -40,9 +40,7 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r border-border">
       <SidebarHeader className="border-b border-border px-4 py-4">
         <Link to="/" className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <Zap className="h-4 w-4 text-primary-foreground" />
-          </div>
+          {/* Logo removed by user request */}
           {!isCollapsed && (
             <span className="text-lg font-semibold text-foreground">
               RoysCompany

@@ -10,45 +10,7 @@ const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/4gM8wOeqfec58K5fbS7kc00';
 
 // Watermark HTML to inject into generated websites
 const WATERMARK_HTML = `
-<div id="preview-watermark" style="
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  background: rgba(15, 23, 42, 0.9);
-  color: white;
-  padding: 12px 24px;
-  border-radius: 50px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  z-index: 99999;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.1);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  transition: all 0.3s ease;
-  cursor: pointer;
-">
-  <span style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; display: inline-block; box-shadow: 0 0 10px #22c55e;"></span>
-  <span>Live Preview Mode</span>
-  <div style="height: 16px; width: 1px; background: rgba(255,255,255,0.2); margin: 0 4px;"></div>
-  <a href="https://RoysCompany.com" target="_blank" style="
-    color: #60A5FA;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 13px;
-    letter-spacing: 0.5px;
-  ">ROYS COMPANY</a>
-</div>
-<style>
-  #preview-watermark:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 15px 30px rgba(0,0,0,0.3);
-    background: rgba(15, 23, 42, 0.95);
-  }
-</style>
+<!-- Watermark Removed by User Request -->
 `;
 
 const TEMPLATE_STYLES = {
@@ -65,7 +27,7 @@ const TEMPLATE_STYLES = {
       textMuted: '#64748B',
     },
     fonts: "font-family: 'Inter', system-ui, -apple-system, sans-serif;",
-    heroStyle: 'immersive gradient background with glassmorphism elements and floating geometric shapes',
+    heroStyle: 'immersive gradient background with glassmorphism elements and floating geometric shapes. Hero image should be a high-quality, abstract or business-relevant photo.',
     features: ['Glassmorphism effects', 'Smooth scroll reveal', 'Modern grid layouts', 'Micro-interactions'],
   },
   classic: {
@@ -81,7 +43,7 @@ const TEMPLATE_STYLES = {
       textMuted: '#718096',
     },
     fonts: "font-family: 'Playfair Display', 'Georgia', serif;",
-    heroStyle: 'luxurious minimal layout with elegant serif typography and gold accents',
+    heroStyle: 'luxurious minimal layout with elegant serif typography and gold accents. Hero image should be a classic architecture or premium lifestyle shot.',
     features: ['Premium serif fonts', 'Gold foil effects', 'Generous whitespace', 'Traditional elegance'],
   },
   minimal: {
@@ -390,6 +352,8 @@ ${industryContent.benefits.map((b, i) => `${i + 1}. ${b}`).join('\n')}
 5. Smooth scroll behavior and hover transitions
 6. The main CTA button MUST link to: ${STRIPE_PAYMENT_LINK}
 7. Include subtle animations (fade-in, hover effects)
+8. **IMAGES:** Use high-quality, professional placeholder images from Unsplash (via source.unsplash.com or similar reliable placeholder service) that match the industry (e.g., 'real estate', 'medical', 'gym'). Do NOT use broken image links.
+9. **LAYOUT:** Ensure sections are distinct with alternating background colors (white vs light gray) to avoid a "wall of text" look.
 
 ## REQUIRED SECTIONS (in order)
 
