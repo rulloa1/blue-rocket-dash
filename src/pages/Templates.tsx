@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Loader2, Plus, Upload, Code, Eye, Trash2 } from 'lucide-react';
+import { LUXURY_REAL_ESTATE_TEMPLATE } from '@/data/defaultTemplates';
+import { Loader2, Plus, Upload, Code, Eye, Trash2, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -41,6 +42,39 @@ export default function Templates() {
 
   const queryClient = useQueryClient();
 
+  const restoreDefaultsMutation = useMutation({
+    mutationFn: async () => {
+      // Check if it already exists to avoid duplicates
+      const { data } = await supabase.from('website_templates').select('id').eq('name', 'Luxury Real Estate').maybeSingle();
+      
+      if (data) {
+          // Update it
+          const { error } = await supabase.from('website_templates').update({
+              html_content: LUXURY_REAL_ESTATE_TEMPLATE,
+              description: 'Premium dark theme with gold accents, scroll animations, donut chart, and typewriter effect.',
+              is_active: true
+          }).eq('id', data.id);
+          if (error) throw error;
+      } else {
+          // Insert it
+          const { error } = await supabase.from('website_templates').insert({
+              name: 'Luxury Real Estate',
+              description: 'Premium dark theme with gold accents, scroll animations, donut chart, and typewriter effect.',
+              html_content: LUXURY_REAL_ESTATE_TEMPLATE,
+              is_active: true
+          });
+          if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['website-templates'] });
+      toast.success('Default templates restored successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to restore defaults: ' + error.message);
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from('website_templates').delete().eq('id', id);
@@ -72,15 +106,21 @@ export default function Templates() {
             Manage and upload HTML templates used for generating client websites.
           </p>
         </div>
-        <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Upload Template
+        <div className="flex gap-2">
+            <Button variant="outline" onClick={() => restoreDefaultsMutation.mutate()} disabled={restoreDefaultsMutation.isPending}>
+                <RefreshCw className={`mr-2 h-4 w-4 ${restoreDefaultsMutation.isPending ? 'animate-spin' : ''}`} />
+                Restore Defaults
             </Button>
-          </DialogTrigger>
-          <UploadTemplateDialog onClose={() => setIsUploadOpen(false)} />
-        </Dialog>
+            <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Upload Template
+                </Button>
+              </DialogTrigger>
+              <UploadTemplateDialog onClose={() => setIsUploadOpen(false)} />
+            </Dialog>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
