@@ -10,6 +10,8 @@ import { useSettings, useUpdateSettings } from '@/hooks/useSettings';
 import { toast } from 'sonner';
 import { encryptSmtpPassword, isPasswordEncrypted } from '@/hooks/useSmtpEncryption';
 
+import { supabase } from '@/integrations/supabase/client';
+
 export function EmailTab() {
   const { data: settings, isLoading } = useSettings();
   const updateSettings = useUpdateSettings();
@@ -22,6 +24,8 @@ export function EmailTab() {
     smtp_from_email: '',
     email_signature: '',
   });
+
+  const [testLoading, setTestLoading] = useState(false);
 
   useEffect(() => {
     if (settings) {
@@ -67,9 +71,22 @@ export function EmailTab() {
     }
   };
 
-  const handleTestEmail = () => {
-    // This would send a test email via an edge function
-    toast.info('Test email functionality coming soon');
+  const handleTestEmail = async () => {
+    setTestLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-test-email', {
+        body: { email: formData.smtp_from_email || settings?.contact_email || 'test@example.com' }
+      });
+
+      if (error) throw error;
+
+      toast.success('Test email sent successfully!');
+    } catch (error: any) {
+      console.error('Test email error:', error);
+      toast.error('Failed to send test email: ' + (error.message || 'Unknown error'));
+    } finally {
+      setTestLoading(false);
+    }
   };
 
   if (isLoading) {
@@ -182,9 +199,9 @@ export function EmailTab() {
           <Button onClick={handleSave} disabled={updateSettings.isPending || isSaving}>
             {isSaving ? 'Encrypting...' : 'Save Settings'}
           </Button>
-          <Button variant="outline" onClick={handleTestEmail}>
-            <Send className="mr-2 h-4 w-4" />
-            Send Test Email
+          <Button variant="outline" onClick={handleTestEmail} disabled={testLoading}>
+            <Send className={`mr-2 h-4 w-4 ${testLoading ? 'animate-spin' : ''}`} />
+            {testLoading ? 'Sending...' : 'Send Test Email'}
           </Button>
         </div>
       </div>
