@@ -54,11 +54,36 @@ export function LeadDrawer({ leadId, open, onOpenChange }: LeadDrawerProps) {
   const addNote = useAddLeadNote();
   const [newNote, setNewNote] = useState('');
   const [showWebsiteModal, setShowWebsiteModal] = useState(false);
+  const [isScoring, setIsScoring] = useState(false);
+  const [isSendingN8n, setIsSendingN8n] = useState(false);
+  const queryClient = useQueryClient();
 
   const handleAddNote = async () => {
     if (!leadId || !newNote.trim()) return;
     await addNote.mutateAsync({ leadId, content: newNote.trim() });
     setNewNote('');
+  };
+
+  const handleSendToN8n = async () => {
+    if (!lead) return;
+    setIsSendingN8n(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('n8n-proxy', {
+        body: { 
+          action: 'process_lead',
+          payload: lead
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success(data.message || 'Sent to n8n successfully');
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to send to n8n: ' + (error as any).message);
+    } finally {
+      setIsSendingN8n(false);
+    }
   };
 
   return (

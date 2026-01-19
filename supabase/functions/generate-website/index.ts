@@ -148,6 +148,54 @@ const TEMPLATE_STYLES = {
     heroStyle: 'technical grid background with cybernetic accents and glowing lines',
     features: ['Cybernetic effects', 'Grid backgrounds', 'Monospace details', 'Tech-focused layout'],
   },
+  luxury: {
+    name: 'Luxury',
+    description: 'High-end, sophisticated design with rich textures, elegant serif fonts, and gold accents.',
+    colors: {
+      primary: '#1C1917',
+      secondary: '#292524',
+      accent: '#D4AF37',
+      background: '#0C0A09',
+      surface: '#1C1917',
+      text: '#FAFAF9',
+      textMuted: '#A8A29E',
+    },
+    fonts: "font-family: 'Cinzel', 'Playfair Display', serif;",
+    heroStyle: 'dramatic dark background with gold accents and cinematic imagery',
+    features: ['Gold foil gradients', 'Cinematic imagery', 'Elegant serif typography', 'Premium spacing'],
+  },
+  startup: {
+    name: 'Startup',
+    description: 'Energetic, friendly, and trustworthy design typical of modern SaaS and tech startups.',
+    colors: {
+      primary: '#6366F1',
+      secondary: '#4F46E5',
+      accent: '#F43F5E',
+      background: '#FFFFFF',
+      surface: '#F9FAFB',
+      text: '#111827',
+      textMuted: '#6B7280',
+    },
+    fonts: "font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;",
+    heroStyle: 'clean and friendly with soft illustrations and rounded shapes',
+    features: ['Rounded corners', 'Friendly illustrations', 'Soft shadows', 'Trust badges'],
+  },
+  creative: {
+    name: 'Creative',
+    description: 'Bold, artistic, and unconventional design for agencies and portfolios.',
+    colors: {
+      primary: '#FEF08A',
+      secondary: '#FDE047',
+      accent: '#000000',
+      background: '#18181B',
+      surface: '#27272A',
+      text: '#FAFAFA',
+      textMuted: '#A1A1AA',
+    },
+    fonts: "font-family: 'Syne', 'Clash Display', sans-serif;",
+    heroStyle: 'brutalist-inspired layout with large typography and bold colors',
+    features: ['Large typography', 'Brutalist elements', 'High contrast', 'Unique grid layouts'],
+  },
 };
 
 const generateIndustryContent = (industry: string, businessName: string) => {
@@ -237,12 +285,12 @@ serve(async (req: Request) => {
     const template = TEMPLATE_STYLES[templateId as keyof typeof TEMPLATE_STYLES] || TEMPLATE_STYLES.modern;
     const industryContent = generateIndustryContent(industry, businessName);
 
-    // MOCK GENERATION if key is missing
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    // REAL AI GENERATION
+    const GOOGLE_AI_KEY = Deno.env.get("GOOGLE_AI_KEY");
     let generatedHtml = "";
 
-    if (!LOVABLE_API_KEY) {
-      console.log("No LOVABLE_API_KEY found, using mock generation.");
+    if (!GOOGLE_AI_KEY) {
+      console.log("No GOOGLE_AI_KEY found, using mock generation.");
       generatedHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -370,42 +418,32 @@ Generate the complete HTML now. Do not include any markdown formatting or explan
 
         console.log('Generating website for:', businessName, 'with template:', templateId);
 
-        const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            model: "google/gemini-3-flash-preview",
-            messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userPrompt },
-            ],
-        }),
+        // Call Google Gemini API directly
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GOOGLE_AI_KEY}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                },
+                contents: [{
+                    role: "user",
+                    parts: [{ text: userPrompt }]
+                }]
+            }),
         });
 
         if (!response.ok) {
-            // Handle error logic...
-             if (response.status === 429) {
-                return new Response(
-                JSON.stringify({ error: "Rate limits exceeded, please try again later." }),
-                { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-                );
-            }
-            if (response.status === 402) {
-                return new Response(
-                JSON.stringify({ error: "AI usage limit reached. Please add credits to continue." }),
-                { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-                );
-            }
             const errorText = await response.text();
-            console.error("AI gateway error:", response.status, errorText);
-            throw new Error(`AI gateway error: ${response.status}`);
+            console.error("Gemini API error:", response.status, errorText);
+            throw new Error(`Gemini API error: ${response.status}`);
         }
 
         const data = await response.json();
-        generatedHtml = data.choices?.[0]?.message?.content || '';
+        // Gemini response structure
+        generatedHtml = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
         // Extract HTML from markdown code blocks if present
         const htmlMatch = generatedHtml.match(/```html\n?([\s\S]*?)```/);

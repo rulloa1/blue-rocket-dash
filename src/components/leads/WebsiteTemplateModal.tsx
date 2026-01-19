@@ -83,6 +83,30 @@ const WEBSITE_TEMPLATES = [
     preview: 'bg-gradient-to-br from-cyan-400/30 via-blue-600/20 to-fuchsia-500/30',
     features: ['Neon effects', 'Grid patterns', 'Monospace fonts'],
   },
+  {
+    id: 'luxury',
+    name: 'Luxury',
+    description: 'High-end, sophisticated design with gold accents',
+    icon: Sparkles,
+    preview: 'bg-gradient-to-br from-yellow-500/20 via-neutral-900/90 to-yellow-600/20',
+    features: ['Gold foil gradients', 'Elegant serif typography', 'Premium spacing'],
+  },
+  {
+    id: 'startup',
+    name: 'Startup',
+    description: 'Energetic, friendly, and trustworthy design for modern companies',
+    icon: Zap,
+    preview: 'bg-gradient-to-br from-indigo-500/20 via-purple-500/10 to-pink-500/20',
+    features: ['Rounded corners', 'Friendly illustrations', 'Trust badges'],
+  },
+  {
+    id: 'creative',
+    name: 'Creative',
+    description: 'Bold, artistic, and unconventional design for agencies',
+    icon: Palette,
+    preview: 'bg-gradient-to-br from-yellow-300/30 via-black/80 to-yellow-400/30',
+    features: ['Large typography', 'Brutalist elements', 'High contrast'],
+  },
 ];
 
 const QUICK_EDIT_SUGGESTIONS = [
