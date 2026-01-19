@@ -50,6 +50,8 @@ const activityIcons: Record<string, React.ElementType> = {
   status_changed: Clock,
 };
 
+import { CreateProposalWizard } from '@/components/proposals/CreateProposalWizard';
+
 export function LeadDrawer({ leadId, open, onOpenChange }: LeadDrawerProps) {
   const { data: lead, isLoading: leadLoading } = useLead(leadId);
   const { data: notes = [], isLoading: notesLoading } = useLeadNotes(leadId);
@@ -57,6 +59,7 @@ export function LeadDrawer({ leadId, open, onOpenChange }: LeadDrawerProps) {
   const addNote = useAddLeadNote();
   const [newNote, setNewNote] = useState('');
   const [showWebsiteModal, setShowWebsiteModal] = useState(false);
+  const [showProposalWizard, setShowProposalWizard] = useState(false);
   const [isScoring, setIsScoring] = useState(false);
   const [isSendingN8n, setIsSendingN8n] = useState(false);
   const queryClient = useQueryClient();
@@ -94,21 +97,27 @@ export function LeadDrawer({ leadId, open, onOpenChange }: LeadDrawerProps) {
     if (!lead) return;
     setIsSendingN8n(true);
     try {
-        const { data, error } = await supabase.functions.invoke('n8n-proxy', {
-            body: { 
-                action: 'process_lead',
-                payload: lead
-            }
-        });
+      const { data, error } = await supabase.functions.invoke('n8n-proxy', {
+        body: {
+          action: 'process_lead',
+          payload: lead
+        }
+      });
 
-        if (error) throw error;
-
-        toast.success(data.message || 'Sent to n8n successfully');
-    } catch (error) {
-        console.error(error);
-        toast.error('Failed to send to n8n: ' + (error as any).message);
+      if (error) {
+        if (error.message && error.message.includes("N8N_WEBHOOK_URL is not set")) {
+          toast.error("Configuration Error: N8N Webhook URL is missing in backend secrets.");
+        } else {
+          throw error;
+        }
+      } else {
+        toast.success(data?.message || 'Sent to n8n successfully');
+      }
+    } catch (error: any) {
+      console.error('Error sending to n8n:', error);
+      toast.error('Failed to send to n8n: ' + (error.message || 'Unknown error'));
     } finally {
-        setIsSendingN8n(false);
+      setIsSendingN8n(false);
     }
   };
 
@@ -224,7 +233,11 @@ export function LeadDrawer({ leadId, open, onOpenChange }: LeadDrawerProps) {
                     )}
                     Send to n8n
                   </Button>
-                  <Button variant="secondary" className="flex-1 gap-2">
+                  <Button 
+                    variant="secondary" 
+                    className="flex-1 gap-2"
+                    onClick={() => setShowProposalWizard(true)}
+                  >
                     <FileText className="h-4 w-4" />
                     Create Proposal
                   </Button>
@@ -338,6 +351,22 @@ export function LeadDrawer({ leadId, open, onOpenChange }: LeadDrawerProps) {
             email: lead.email,
             phone: lead.phone,
             website: lead.website,
+          }}
+        />
+      )}
+
+      {showProposalWizard && lead && (
+        <CreateProposalWizard
+          onClose={() => setShowProposalWizard(false)}
+          onComplete={() => {
+            setShowProposalWizard(false);
+            toast.success('Proposal created successfully');
+          }}
+          initialData={{
+            client_name: lead.business_name,
+            client_email: lead.email || '',
+            client_business: lead.industry || '',
+            lead_id: lead.id,
           }}
         />
       )}

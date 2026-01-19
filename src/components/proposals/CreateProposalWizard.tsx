@@ -12,6 +12,7 @@ import { useCreateProposal, type LineItem, type ProposalTemplate, type ProposalS
 interface CreateProposalWizardProps {
   onClose: () => void;
   onComplete: () => void;
+  initialData?: Partial<ProposalFormData>;
 }
 
 export interface ProposalFormData {
@@ -36,7 +37,7 @@ const STEPS = [
   { id: 4, title: 'Preview' },
 ];
 
-export function CreateProposalWizard({ onClose, onComplete }: CreateProposalWizardProps) {
+export function CreateProposalWizard({ onClose, onComplete, initialData }: CreateProposalWizardProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<ProposalFormData>({
     template: null,
@@ -49,6 +50,7 @@ export function CreateProposalWizard({ onClose, onComplete }: CreateProposalWiza
     delivery_date: '',
     terms: '',
     notes: '',
+    ...initialData,
   });
 
   const createProposal = useCreateProposal();
