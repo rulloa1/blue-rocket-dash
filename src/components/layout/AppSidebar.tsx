@@ -6,6 +6,7 @@ import {
   GitBranch,
   FileText,
   Settings,
+  LayoutTemplate,
   Zap,
 } from 'lucide-react';
 import {
@@ -28,6 +29,7 @@ const navItems = [
   { title: 'Outreach', url: '/outreach', icon: Send },
   { title: 'Pipeline', url: '/pipeline', icon: GitBranch },
   { title: 'Proposals', url: '/proposals', icon: FileText },
+  { title: 'Templates', url: '/templates', icon: LayoutTemplate },
   { title: 'Settings', url: '/settings', icon: Settings },
 ];
 

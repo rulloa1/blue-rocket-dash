@@ -12,6 +12,7 @@ import Outreach from "./pages/Outreach";
 import Pipeline from "./pages/Pipeline";
 import Proposals from "./pages/Proposals";
 import Settings from "./pages/Settings";
+import Templates from "./pages/Templates";
 import PublicWebsite from "./pages/PublicWebsite";
 import ActivateWebsite from "./pages/ActivateWebsite";
 import NotFound from "./pages/NotFound";
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/outreach" element={<ProtectedRoute><Outreach /></ProtectedRoute>} />
             <Route path="/pipeline" element={<ProtectedRoute><Pipeline /></ProtectedRoute>} />
             <Route path="/proposals" element={<ProtectedRoute><Proposals /></ProtectedRoute>} />
+            <Route path="/templates" element={<ProtectedRoute><Templates /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/site/:publicId" element={<PublicWebsite />} />
             <Route path="/activate" element={<ProtectedRoute><ActivateWebsite /></ProtectedRoute>} />
