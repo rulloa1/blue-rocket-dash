@@ -101,6 +101,16 @@ export function LeadDrawer({ leadId, open, onOpenChange }: LeadDrawerProps) {
                 <div className="flex items-center gap-4">
                   <AIScoreIndicator score={lead.ai_score} />
                   <span className="text-xs text-muted-foreground">AI Score</span>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-6 w-6 ml-auto" 
+                    onClick={handleRefreshScore}
+                    disabled={isScoring}
+                    title="Recalculate Score"
+                  >
+                    <RefreshCw className={`h-3 w-3 ${isScoring ? 'animate-spin' : ''}`} />
+                  </Button>
                 </div>
               </div>
 

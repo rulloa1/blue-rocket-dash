@@ -11,8 +11,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ScrapeLeadsModalProps {
     open: boolean;
@@ -23,6 +25,7 @@ export function ScrapeLeadsModal({ open, onOpenChange }: ScrapeLeadsModalProps) 
     const [city, setCity] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const { user } = useAuth();
+    const queryClient = useQueryClient();
 
     const handleScrape = async () => {
         if (!city) return;
@@ -34,29 +37,27 @@ export function ScrapeLeadsModal({ open, onOpenChange }: ScrapeLeadsModalProps) 
         setIsLoading(true);
 
         try {
-            // TRIGGER PHP SCRIPT ON LOCALHOST (XAMPP)
-            const WEBHOOK_URL = "http://localhost/process_leads.php";
-
-            const response = await fetch(WEBHOOK_URL, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
+            const { data, error } = await supabase.functions.invoke('scrape-leads', {
+                body: {
                     city: city,
                     userId: user.id,
-                }),
+                }
             });
 
-            if (response.ok) {
-                toast.success("Scraping started! Leads will appear shortly.");
+            if (error) throw error;
+
+            if (data.success) {
+                toast.success(data.message || "Scraping complete!");
+                // Refresh the leads list
+                queryClient.invalidateQueries({ queryKey: ['leads'] });
                 onOpenChange(false);
+                setCity(""); 
             } else {
                 toast.error("Failed to start scraping.");
             }
         } catch (error) {
             console.error(error);
-            toast.error("Error triggering automation.");
+            toast.error("Error triggering automation: " + (error as any).message);
         } finally {
             setIsLoading(false);
         }
@@ -82,13 +83,16 @@ export function ScrapeLeadsModal({ open, onOpenChange }: ScrapeLeadsModalProps) 
                             onChange={(e) => setCity(e.target.value)}
                             className="col-span-3"
                             placeholder="e.g. San Francisco"
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleScrape();
+                            }}
                         />
                     </div>
                 </div>
                 <DialogFooter>
                     <Button onClick={handleScrape} disabled={isLoading}>
                         {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Start Scraping
+                        {isLoading ? "Finding Agents..." : "Start Scraping"}
                     </Button>
                 </DialogFooter>
             </DialogContent>

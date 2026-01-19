@@ -218,11 +218,6 @@ serve(async (req: Request) => {
   try {
     const { businessName, industry, templateId, email, phone, website, leadId } = await req.json();
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
-    }
-
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       throw new Error("Authorization header is required");
@@ -242,7 +237,67 @@ serve(async (req: Request) => {
     const template = TEMPLATE_STYLES[templateId as keyof typeof TEMPLATE_STYLES] || TEMPLATE_STYLES.modern;
     const industryContent = generateIndustryContent(industry, businessName);
 
-    const systemPrompt = `You are a world-class web designer creating stunning, conversion-optimized landing pages.
+    // MOCK GENERATION if key is missing
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    let generatedHtml = "";
+
+    if (!LOVABLE_API_KEY) {
+      console.log("No LOVABLE_API_KEY found, using mock generation.");
+      generatedHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${businessName} - ${industry || 'Business'}</title>
+    <style>
+        body { margin: 0; font-family: ${template.fonts.replace("font-family: ", "").replace(";", "")}; color: ${template.colors.text}; background: ${template.colors.background}; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        .hero { background: ${template.colors.primary}; color: white; padding: 4rem 2rem; text-align: center; }
+        .btn { display: inline-block; padding: 1rem 2rem; background: ${template.colors.accent}; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: 1rem; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; padding: 2rem 0; }
+        .card { padding: 2rem; background: ${template.colors.surface}; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <nav style="padding: 1rem 2rem; border-bottom: 1px solid ${template.colors.surface}; display: flex; justify-content: space-between; align-items: center;">
+        <h1 style="margin: 0; font-size: 1.5rem; color: ${template.colors.primary};">${businessName}</h1>
+        <div>
+            <a href="#contact" style="color: ${template.colors.text}; text-decoration: none;">Contact</a>
+        </div>
+    </nav>
+    <section class="hero">
+        <h1 style="font-size: 3rem; margin-bottom: 1rem;">${industryContent.tagline}</h1>
+        <p style="font-size: 1.25rem; opacity: 0.9; max-width: 600px; margin: 0 auto;">We provide top-tier ${industry || 'business'} services tailored to your needs.</p>
+        <a href="${STRIPE_PAYMENT_LINK}" class="btn">Get Started</a>
+    </section>
+    <div class="container">
+        <h2 style="text-align: center; margin-bottom: 3rem;">Our Services</h2>
+        <div class="grid">
+            ${industryContent.services.map(s => `
+            <div class="card">
+                <h3 style="color: ${template.colors.primary}; margin-top: 0;">${s}</h3>
+                <p style="color: ${template.colors.textMuted};">Professional ${s.toLowerCase()} delivered with excellence and care.</p>
+            </div>`).join('')}
+        </div>
+        <div style="background: ${template.colors.surface}; padding: 3rem; border-radius: 1rem; text-align: center; margin: 3rem 0;">
+            <h2>Why Choose Us?</h2>
+            <div class="grid" style="text-align: left;">
+                 ${industryContent.benefits.map(b => `
+                <div>
+                    <h3 style="margin-bottom: 0.5rem;">✓ ${b}</h3>
+                </div>`).join('')}
+            </div>
+        </div>
+    </div>
+    <footer style="background: ${template.colors.secondary}; color: white; padding: 3rem 2rem; text-align: center;">
+        <p>&copy; ${new Date().getFullYear()} ${businessName}. All rights reserved.</p>
+        <p>${email || ''} | ${phone || ''}</p>
+    </footer>
+    ${WATERMARK_HTML}
+</body>
+</html>`;
+    } else {
+        const systemPrompt = `You are a world-class web designer creating stunning, conversion-optimized landing pages.
 Your task is to generate a complete, production-ready HTML landing page.
 
 ## DESIGN SPECIFICATIONS
@@ -311,71 +366,72 @@ ${website ? `- Include link to: ${website}` : ''}
 
 Generate the complete HTML now. Do not include any markdown formatting or explanations - just the raw HTML.`;
 
-    const userPrompt = `Generate a beautiful ${template.name} style landing page for "${businessName}" in the ${industry || 'General Business'} industry. Make it look professional and conversion-focused with the Stripe payment button prominently featured.`;
+        const userPrompt = `Generate a beautiful ${template.name} style landing page for "${businessName}" in the ${industry || 'General Business'} industry. Make it look professional and conversion-focused with the Stripe payment button prominently featured.`;
 
-    console.log('Generating website for:', businessName, 'with template:', templateId);
+        console.log('Generating website for:', businessName, 'with template:', templateId);
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-      }),
-    });
+        const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            model: "google/gemini-3-flash-preview",
+            messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+            ],
+        }),
+        });
 
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limits exceeded, please try again later." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "AI usage limit reached. Please add credits to continue." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      throw new Error(`AI gateway error: ${response.status}`);
-    }
+        if (!response.ok) {
+            // Handle error logic...
+             if (response.status === 429) {
+                return new Response(
+                JSON.stringify({ error: "Rate limits exceeded, please try again later." }),
+                { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+                );
+            }
+            if (response.status === 402) {
+                return new Response(
+                JSON.stringify({ error: "AI usage limit reached. Please add credits to continue." }),
+                { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+                );
+            }
+            const errorText = await response.text();
+            console.error("AI gateway error:", response.status, errorText);
+            throw new Error(`AI gateway error: ${response.status}`);
+        }
 
-    const data = await response.json();
-    const generatedHtml = data.choices?.[0]?.message?.content || '';
+        const data = await response.json();
+        generatedHtml = data.choices?.[0]?.message?.content || '';
 
-    // Extract HTML from markdown code blocks if present
-    let cleanHtml = generatedHtml;
-    const htmlMatch = generatedHtml.match(/```html\n?([\s\S]*?)```/);
-    if (htmlMatch) {
-      cleanHtml = htmlMatch[1].trim();
-    } else {
-      const codeMatch = generatedHtml.match(/```\n?([\s\S]*?)```/);
-      if (codeMatch) {
-        cleanHtml = codeMatch[1].trim();
-      }
-    }
+        // Extract HTML from markdown code blocks if present
+        const htmlMatch = generatedHtml.match(/```html\n?([\s\S]*?)```/);
+        if (htmlMatch) {
+            generatedHtml = htmlMatch[1].trim();
+        } else {
+            const codeMatch = generatedHtml.match(/```\n?([\s\S]*?)```/);
+            if (codeMatch) {
+                generatedHtml = codeMatch[1].trim();
+            }
+        }
+        
+        // Ensure the HTML starts with DOCTYPE if it was stripped
+        if (!generatedHtml.toLowerCase().startsWith('<!doctype')) {
+        if (generatedHtml.toLowerCase().startsWith('<html')) {
+            generatedHtml = '<!DOCTYPE html>\n' + generatedHtml;
+        }
+        }
 
-    // Ensure the HTML starts with DOCTYPE if it was stripped
-    if (!cleanHtml.toLowerCase().startsWith('<!doctype')) {
-      if (cleanHtml.toLowerCase().startsWith('<html')) {
-        cleanHtml = '<!DOCTYPE html>\n' + cleanHtml;
-      }
-    }
-
-    // Inject the watermark before the closing body tag
-    if (cleanHtml.toLowerCase().includes('</body>')) {
-      cleanHtml = cleanHtml.replace(/<\/body>/i, `${WATERMARK_HTML}\n</body>`);
-    } else {
-      // If no body tag, append to the end
-      cleanHtml += WATERMARK_HTML;
+        // Inject the watermark before the closing body tag
+        if (generatedHtml.toLowerCase().includes('</body>')) {
+        generatedHtml = generatedHtml.replace(/<\/body>/i, `${WATERMARK_HTML}\n</body>`);
+        } else {
+        // If no body tag, append to the end
+        generatedHtml += WATERMARK_HTML;
+        }
     }
 
     console.log('Website generated successfully, saving to database...');
@@ -387,7 +443,7 @@ Generate the complete HTML now. Do not include any markdown formatting or explan
         lead_id: leadId || null,
         business_name: businessName,
         template_id: templateId,
-        html_content: cleanHtml,
+        html_content: generatedHtml,
       })
       .select('public_id')
       .single();
@@ -402,7 +458,7 @@ Generate the complete HTML now. Do not include any markdown formatting or explan
     return new Response(
       JSON.stringify({ 
         success: true, 
-        html: cleanHtml,
+        html: generatedHtml,
         publicId: websiteData.public_id,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
