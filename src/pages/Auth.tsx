@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Zap, Loader2 } from 'lucide-react';
+import { Zap, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,6 +13,7 @@ export default function Auth() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
 
@@ -29,6 +31,7 @@ export default function Auth() {
 
   const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
     
     if (!email) {
       toast({
@@ -41,27 +44,33 @@ export default function Auth() {
 
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/`,
-      },
-    });
-
-    setLoading(false);
-
-    if (error) {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+        },
       });
-    } else {
+
+      if (error) {
+        throw error;
+      }
+
       setEmailSent(true);
       toast({
         title: 'Check your email',
         description: 'We sent you a magic link to sign in.',
       });
+    } catch (error: any) {
+      console.error('Login error:', error);
+      setErrorMessage(error.message || 'An error occurred during sign in');
+      toast({
+        title: 'Error',
+        description: error.message || 'An error occurred',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
