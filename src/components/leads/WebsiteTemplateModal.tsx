@@ -154,22 +154,53 @@ export function WebsiteTemplateModal({
   const { data: customTemplates = [] } = useQuery({
     queryKey: ['website-templates'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('website_templates')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
+      let dbTemplates: any[] = [];
+      try {
+        const { data, error } = await supabase
+          .from('website_templates')
+          .select('*')
+          .eq('is_active', true)
+          .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        dbTemplates = data.map(t => ({
+          id: t.id,
+          name: t.name,
+          description: t.description || 'Custom uploaded template',
+          icon: LayoutTemplate,
+          preview: 'bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300',
+          features: ['Custom Design', 'Uploaded'],
+          isCustom: true,
+          html_content: t.html_content
+        }));
+      } catch (err) {
+        console.warn('Failed to fetch templates from DB', err);
+      }
       
-      if (error) throw error;
-      return data.map(t => ({
-        id: t.id, // UUID
-        name: t.name,
-        description: t.description || 'Custom uploaded template',
-        icon: LayoutTemplate,
-        preview: 'bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300', // Default placeholder
-        features: ['Custom Design', 'Uploaded'],
-        isCustom: true
-      }));
+      // Always fetch local templates
+      let localTemplates: any[] = [];
+      try {
+          const raw = localStorage.getItem('local_templates');
+          if (raw) {
+              const parsed = JSON.parse(raw);
+              if (Array.isArray(parsed)) {
+                  localTemplates = parsed.map((t: any) => ({
+                      id: t.id,
+                      name: t.name,
+                      description: t.description || 'Custom uploaded template (Local)',
+                      icon: LayoutTemplate,
+                      preview: 'bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300',
+                      features: ['Custom Design', 'Local Storage'],
+                      isCustom: true,
+                      html_content: t.html_content
+                  }));
+              }
+          }
+      } catch (e) {
+          console.warn("Error parsing local templates", e);
+      }
+
+      return [...localTemplates, ...dbTemplates];
     },
   });
 
@@ -236,8 +267,10 @@ export function WebsiteTemplateModal({
 
     setIsGenerating(true);
     try {
-      const { data, error } = await supabase.functions.invoke('generate-website', {
-        body: {
+      // Find the full template object if it's a custom one
+      const customTemplate = customTemplates.find((t: any) => t.id === selectedTemplate);
+      
+      const payload: any = {
           businessName: lead.business_name,
           industry: lead.industry,
           templateId: selectedTemplate,
@@ -245,13 +278,17 @@ export function WebsiteTemplateModal({
           phone: lead.phone,
           website: lead.website,
           leadId: lead.id,
-          // If the ID is a UUID (custom template), pass it as preferred_template
-          // If it's a hardcoded ID (e.g. 'modern'), we pass it but the backend might ignore it or use default
-          // Actually, we should probably update the backend to handle legacy IDs if needed, 
-          // but for now, passing the ID is fine. 
-          // We can rename the field in the payload to match what the backend expects:
-          preferred_template: selectedTemplate, 
-        },
+          preferred_template: selectedTemplate,
+      };
+
+      // If it's a custom template (DB or Local), send the HTML content directly
+      // This bypasses the need for the Edge Function to look it up in the DB
+      if (customTemplate && customTemplate.html_content) {
+          payload.custom_template_html = customTemplate.html_content;
+      }
+
+      const { data, error } = await supabase.functions.invoke('generate-website', {
+        body: payload,
       });
 
       if (error) throw error;

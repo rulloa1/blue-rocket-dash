@@ -30,13 +30,35 @@ export default function Templates() {
   const { data: templates, isLoading } = useQuery({
     queryKey: ['website-templates'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('website_templates')
-        .select('*')
-        .order('created_at', { ascending: false });
+      let dbTemplates: Template[] = [];
+      try {
+        // Attempt to fetch from DB
+        const { data, error } = await supabase
+          .from('website_templates')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (!error && data) {
+           dbTemplates = data as Template[];
+        }
+      } catch (err) {
+        console.warn('Failed to fetch templates from DB', err);
+      }
+
+      // Always fetch local templates
+      let local: any[] = [];
+      try {
+          const raw = localStorage.getItem('local_templates');
+          if (raw) {
+              local = JSON.parse(raw);
+              if (!Array.isArray(local)) local = [];
+          }
+      } catch (e) {
+          local = [];
+      }
       
-      if (error) throw error;
-      return data as Template[];
+      // Combine them (Local first so they appear at top)
+      return [...local, ...dbTemplates];
     },
   });
 
@@ -44,26 +66,44 @@ export default function Templates() {
 
   const restoreDefaultsMutation = useMutation({
     mutationFn: async () => {
-      // Check if it already exists to avoid duplicates
-      const { data } = await supabase.from('website_templates').select('id').eq('name', 'Luxury Real Estate').maybeSingle();
-      
-      if (data) {
-          // Update it
-          const { error } = await supabase.from('website_templates').update({
-              html_content: LUXURY_REAL_ESTATE_TEMPLATE,
-              description: 'Premium dark theme with gold accents, scroll animations, donut chart, and typewriter effect.',
-              is_active: true
-          }).eq('id', data.id);
-          if (error) throw error;
-      } else {
-          // Insert it
-          const { error } = await supabase.from('website_templates').insert({
-              name: 'Luxury Real Estate',
-              description: 'Premium dark theme with gold accents, scroll animations, donut chart, and typewriter effect.',
-              html_content: LUXURY_REAL_ESTATE_TEMPLATE,
-              is_active: true
-          });
-          if (error) throw error;
+      // Try DB first
+      try {
+        const { data } = await supabase.from('website_templates').select('id').eq('name', 'Luxury Real Estate').maybeSingle();
+        
+        if (data) {
+            await supabase.from('website_templates').update({
+                html_content: LUXURY_REAL_ESTATE_TEMPLATE,
+                description: 'Premium dark theme with gold accents, scroll animations, donut chart, and typewriter effect.',
+                is_active: true
+            }).eq('id', data.id);
+        } else {
+            await supabase.from('website_templates').insert({
+                name: 'Luxury Real Estate',
+                description: 'Premium dark theme with gold accents, scroll animations, donut chart, and typewriter effect.',
+                html_content: LUXURY_REAL_ESTATE_TEMPLATE,
+                is_active: true
+            });
+        }
+      } catch (err: any) {
+         // Fallback to local storage
+         console.warn('DB Restore failed, falling back to local storage', err);
+         
+         const newTemplate: Template = {
+             id: 'local-luxury-' + Date.now(),
+             name: 'Luxury Real Estate',
+             description: 'Premium dark theme (Local Fallback)',
+             html_content: LUXURY_REAL_ESTATE_TEMPLATE,
+             thumbnail_url: null,
+             created_at: new Date().toISOString(),
+             is_active: true
+         };
+         
+         const existing = JSON.parse(localStorage.getItem('local_templates') || '[]');
+         // Remove old default if exists
+         const filtered = existing.filter((t: any) => t.name !== 'Luxury Real Estate');
+         localStorage.setItem('local_templates', JSON.stringify([newTemplate, ...filtered]));
+         
+         throw new Error("Saved to local storage (Database table missing). Refresh to see changes.");
       }
     },
     onSuccess: () => {
@@ -71,7 +111,12 @@ export default function Templates() {
       toast.success('Default templates restored successfully');
     },
     onError: (error) => {
-      toast.error('Failed to restore defaults: ' + error.message);
+       if (error.message.includes("Saved to local storage")) {
+           toast.success("Saved to local storage (Database not configured)");
+           queryClient.invalidateQueries({ queryKey: ['website-templates'] });
+       } else {
+           toast.error('Failed to restore defaults: ' + error.message);
+       }
     },
   });
 
@@ -221,20 +266,95 @@ function UploadTemplateDialog({ onClose }: { onClose: () => void }) {
     }
 
     setIsSubmitting(true);
+    
+    // Helper to save locally
+    const saveToLocal = (): { success: boolean; error?: any } => {
+        try {
+            const newTemplate: Template = {
+                id: 'local-custom-' + Date.now(),
+                name: formData.name,
+                description: formData.description + ' (Local)',
+                html_content: formData.html_content,
+                thumbnail_url: null,
+                created_at: new Date().toISOString(),
+                is_active: true
+            };
+            
+            let existing: any[] = [];
+            try {
+                const raw = localStorage.getItem('local_templates');
+                if (raw) {
+                    existing = JSON.parse(raw);
+                    if (!Array.isArray(existing)) existing = [];
+                }
+            } catch (parseError) {
+                console.warn("Corrupted local templates, resetting.", parseError);
+                existing = [];
+            }
+
+            // Try to save
+            try {
+                localStorage.setItem('local_templates', JSON.stringify([newTemplate, ...existing]));
+            } catch (storageError: any) {
+                // If quota exceeded, try removing the oldest local template
+                if (storageError.name === 'QuotaExceededError' || storageError.message?.includes('exceeded')) {
+                    if (existing.length > 0) {
+                        // Remove last 2 to be safe
+                        const reduced = existing.slice(0, Math.max(0, existing.length - 2));
+                        localStorage.setItem('local_templates', JSON.stringify([newTemplate, ...reduced]));
+                        toast.info("Local storage full. Removed oldest templates to make space.");
+                        return { success: true };
+                    }
+                }
+                throw storageError;
+            }
+            return { success: true };
+        } catch (e) {
+            console.error("Local storage failed", e);
+            return { success: false, error: e };
+        }
+    };
+
     try {
-      const { error } = await supabase.from('website_templates').insert({
-        name: formData.name,
-        description: formData.description,
-        html_content: formData.html_content,
-      });
+        // Try saving to DB first
+        const { error } = await supabase.from('website_templates').insert({
+          name: formData.name,
+          description: formData.description,
+          html_content: formData.html_content,
+        });
 
-      if (error) throw error;
-
-      toast.success('Template uploaded successfully');
-      queryClient.invalidateQueries({ queryKey: ['website-templates'] });
-      onClose();
+        if (error) {
+             console.warn("DB Insert failed, trying local fallback", error);
+             const localResult = saveToLocal();
+             if (localResult.success) {
+                 toast.success('Saved to local storage (Database not configured)');
+                 queryClient.invalidateQueries({ queryKey: ['website-templates'] });
+                 onClose();
+             } else {
+                 // Throw a combined error
+                 throw new Error(`Database error: ${error.message}. Local save failed: ${localResult.error?.message || 'Unknown storage error'}`);
+             }
+        } else {
+            toast.success('Template uploaded successfully');
+            queryClient.invalidateQueries({ queryKey: ['website-templates'] });
+            onClose();
+        }
     } catch (error: any) {
-      toast.error('Failed to upload template: ' + error.message);
+        // Catch network errors or exceptions
+        console.warn("Unexpected error, trying local fallback", error);
+        
+        // Only try local save if we haven't already (check if error message comes from above)
+        if (!error.message?.includes('Local save failed')) {
+            const localResult = saveToLocal();
+            if (localResult.success) {
+                toast.success('Saved to local storage (Network/DB error)');
+                queryClient.invalidateQueries({ queryKey: ['website-templates'] });
+                onClose();
+                return;
+            }
+        }
+        
+        toast.error(error.message || "Failed to upload template");
     } finally {
       setIsSubmitting(false);
     }
