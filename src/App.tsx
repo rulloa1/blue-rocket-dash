@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Leads from "./pages/Leads";
@@ -27,13 +28,13 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/leads" element={<Leads />} />
-            <Route path="/outreach" element={<Outreach />} />
-            <Route path="/pipeline" element={<Pipeline />} />
-            <Route path="/proposals" element={<Proposals />} />
-            <Route path="/settings" element={<Settings />} />
+            <Route path="/leads" element={<ProtectedRoute><Leads /></ProtectedRoute>} />
+            <Route path="/outreach" element={<ProtectedRoute><Outreach /></ProtectedRoute>} />
+            <Route path="/pipeline" element={<ProtectedRoute><Pipeline /></ProtectedRoute>} />
+            <Route path="/proposals" element={<ProtectedRoute><Proposals /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/site/:publicId" element={<PublicWebsite />} />
-            <Route path="/activate" element={<ActivateWebsite />} />
+            <Route path="/activate" element={<ProtectedRoute><ActivateWebsite /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

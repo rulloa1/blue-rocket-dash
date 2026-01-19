@@ -45,10 +45,13 @@ export default function Auth() {
     setLoading(true);
 
     try {
+      const redirectUrl = window.location.origin;
+      console.log('Using redirect URL:', redirectUrl);
+      
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: redirectUrl,
         },
       });
 
