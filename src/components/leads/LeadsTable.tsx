@@ -74,8 +74,13 @@ export function LeadsTable({
 
   const handleDelete = async () => {
     if (deleteId) {
-      await deleteLead.mutateAsync(deleteId);
-      setDeleteId(null);
+      try {
+        await deleteLead.mutateAsync(deleteId);
+        setDeleteId(null);
+      } catch (error) {
+        console.error("Failed to delete lead", error);
+        toast.error("Failed to delete lead");
+      }
     }
   };
 
@@ -150,8 +155,11 @@ export function LeadsTable({
                   <LeadStatusBadge status={lead.status as LeadStatus} />
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {format(new Date(lead.created_at), 'MMM d, yyyy')}
-                </TableCell>
+                {(() => {
+                    const date = new Date(lead.created_at);
+                    return isNaN(date.getTime()) ? 'Invalid Date' : format(date, 'MMM d, yyyy');
+                })()}
+              </TableCell>
                 <TableCell onClick={(e) => e.stopPropagation()}>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

@@ -64,6 +64,41 @@ serve(async (req) => {
       throw updateError;
     }
 
+    // --- TELEGRAM NOTIFICATION (Merged from lead-qualifier) ---
+    // If score is high (>= 7), send a notification
+    if (score >= 7) {
+        const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
+        const CHAT_ID = Deno.env.get("TELEGRAM_CHAT_ID");
+
+        if (BOT_TOKEN && CHAT_ID) {
+            try {
+                // Construct a helpful message
+                const message = `🚀 *High Quality Lead Detected!*\n\n` +
+                                `*Score:* ${score}/10\n` +
+                                `*Name:* ${lead.agent_name || "Unknown"}\n` +
+                                `*Email:* ${lead.email || "N/A"}\n` +
+                                `*Phone:* ${lead.phone || "N/A"}\n` +
+                                `*Website:* ${lead.website || lead.website_url || "N/A"}\n\n` +
+                                `_Log in to dashboard to view details._`;
+
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        chat_id: CHAT_ID,
+                        text: message,
+                        parse_mode: "Markdown"
+                    }),
+                });
+                console.log("Telegram notification sent.");
+            } catch (err) {
+                console.error("Failed to send Telegram notification:", err);
+                // Don't fail the whole request just because notification failed
+            }
+        }
+    }
+    // ----------------------------------------------------------
+
     return new Response(
       JSON.stringify({
         success: true,
