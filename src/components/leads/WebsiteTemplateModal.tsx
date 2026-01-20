@@ -36,7 +36,17 @@ interface WebsiteTemplateModalProps {
   onLeadUpdate?: () => void;
 }
 
+import { KONTAKO_TEMPLATE } from '@/data/kontakoTemplate';
+
 const WEBSITE_TEMPLATES = [
+  {
+    id: 'kontako',
+    name: 'Kontako Modern',
+    description: 'Ultra-modern dark theme with orange accents for architecture and luxury.',
+    icon: LayoutTemplate,
+    preview: 'bg-[#0f0f0f] border-[#ff4d1c]',
+    features: ['Dark Mode', 'Smooth Scroll', 'Modern Forms'],
+  },
   {
     id: 'modern',
     name: 'Modern',
@@ -345,30 +355,64 @@ export function WebsiteTemplateModal({
     try {
       // 1. Get Template Content
       let templateHtml = '';
-      const customTemplate = customTemplates.find((t: any) => t.id === selectedTemplate);
       
-      if (customTemplate && customTemplate.html_content) {
-          templateHtml = customTemplate.html_content;
+      if (selectedTemplate === 'kontako') {
+          templateHtml = KONTAKO_TEMPLATE;
       } else {
-          // If it's a hardcoded ID, try to find it in default templates (though they don't have HTML content in the array above)
-          // For now, let's assume we only really care about the custom/uploaded ones or we fetch the default one from the DB/Local
-          // Actually, if it's not custom, we might still need to fetch it.
-          // BUT, since we have the "Luxury" one seeded locally now, it should be in customTemplates list if loaded from LocalStorage
-          
-          if (!templateHtml) {
-             // Fallback for "hardcoded" types if they are not in the local/db list
-             // This is a simplified fallback
-             templateHtml = `<html><body><h1>Website for ${lead.business_name}</h1><p>Template: ${selectedTemplate}</p></body></html>`;
+          const customTemplate = customTemplates.find((t: any) => t.id === selectedTemplate);
+          if (customTemplate && customTemplate.html_content) {
+              templateHtml = customTemplate.html_content;
+          } else {
+              if (!templateHtml) {
+                 // Fallback for "hardcoded" types if they are not in the local/db list
+                 templateHtml = `<html><body><h1>Website for ${lead.business_name}</h1><p>Template: ${selectedTemplate}</p></body></html>`;
+              }
           }
       }
 
       // 2. Prepare Data
       const agentData = {
+          // Standard fields
+          business_name: lead.business_name || 'My Business',
           agent_name: lead.business_name || 'Agent',
           brokerage: 'Royal Automate Brokerage',
-          email: lead.email || '',
+          email: lead.email || 'contact@example.com',
           phone: lead.phone || '',
-          city_area: 'The Woodlands', // Default or inferred
+          city_area: 'The Woodlands',
+          
+          // New Template Fields (Handlebars)
+          site_title: lead.business_name || 'Future Living',
+          tagline: 'Future Living',
+          meta_description: `Exclusive properties represented by ${lead.business_name}.`,
+          accent_color: '#ff4d1c', // Default orange accent
+          brand_name: lead.business_name || 'KONTAKO',
+          hero_image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop',
+          hero_headline: 'The Future <br> of Home Living',
+          hero_subtext: 'Trust us with your dreams! We are ready to help you build the dream property that will be your future sanctuary.',
+          contact_email: lead.email || 'hello@example.com',
+          contact_phone: lead.phone || '+1 (555) 000-0000',
+          
+          // Project Loop Data
+          projects: [
+             { 
+               grid_class: "md:col-span-3", 
+               image: "https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&q=80&w=800", 
+               number: "01", 
+               title: "Pedro Residence" 
+             },
+             { 
+               grid_class: "md:col-span-4", 
+               image: "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&q=80&w=800", 
+               number: "02", 
+               title: "Sunset Plaza" 
+             },
+             { 
+               grid_class: "md:col-span-5", 
+               image: "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?auto=format&fit=crop&q=80&w=800", 
+               number: "03", 
+               title: "Cliffwood Ave" 
+             }
+          ]
       };
 
       // 3. Generate HTML Locally
