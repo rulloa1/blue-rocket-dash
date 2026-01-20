@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -60,31 +59,6 @@ export function useLeads(filters: LeadFilters) {
     },
     enabled: !!user,
   });
-
-  // Real-time Subscription
-  const queryClient = useQueryClient();
-  useEffect(() => {
-    if (!user) return;
-
-    const channel = supabase
-      .channel('schema-db-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'leads',
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['leads'] });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, queryClient]);
 }
 
 export function useLead(id: string | null) {

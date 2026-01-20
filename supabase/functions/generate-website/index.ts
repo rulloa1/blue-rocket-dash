@@ -10,15 +10,40 @@ const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/4gM8wOeqfec58K5fbS7kc00';
 
 // Watermark HTML to inject into generated websites
 const WATERMARK_HTML = `
-<!-- Watermark Removed by User Request -->
+<div id="preview-watermark" style="
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: linear-gradient(135deg, rgba(0,0,0,0.85) 0%, rgba(30,30,30,0.9) 100%);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 99999;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+">
+  <span style="opacity: 0.7;">Preview by</span>
+  <a href="https://RoysCompany.com" target="_blank" style="
+    color: #60A5FA;
+    text-decoration: none;
+    font-weight: 600;
+  ">RoysCompany.com</a>
+</div>
 `;
 
 const TEMPLATE_STYLES = {
   modern: {
     name: 'Modern',
-    description: 'Award-winning contemporary design with clean lines, bold typography, and sophisticated use of negative space.',
+    description: 'Clean, contemporary design with bold typography and smooth gradients',
     colors: {
-      primary: '#2563EB',
+      primary: '#3B82F6',
       secondary: '#1E40AF', 
       accent: '#06B6D4',
       background: '#FFFFFF',
@@ -26,137 +51,89 @@ const TEMPLATE_STYLES = {
       text: '#0F172A',
       textMuted: '#64748B',
     },
-    fonts: "font-family: 'Inter', system-ui, -apple-system, sans-serif;",
-    heroStyle: 'immersive gradient background with glassmorphism elements and floating geometric shapes. Hero image should be a high-quality, abstract or business-relevant photo.',
-    features: ['Glassmorphism effects', 'Smooth scroll reveal', 'Modern grid layouts', 'Micro-interactions'],
+    fonts: "font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;",
+    heroStyle: 'gradient background with floating geometric shapes',
+    features: ['Smooth hover animations', 'Gradient CTAs', 'Card-based layouts', 'Subtle shadows'],
   },
   classic: {
     name: 'Classic',
-    description: 'Timeless luxury and elegance with refined serif typography and a sophisticated gold-accented palette.',
+    description: 'Timeless elegance with refined typography and sophisticated color palette',
     colors: {
-      primary: '#1A202C',
-      secondary: '#2D3748',
-      accent: '#D69E2E',
+      primary: '#1E3A5F',
+      secondary: '#2C5282',
+      accent: '#C9A227',
       background: '#FFFEF8',
-      surface: '#FDFBF7',
-      text: '#2D3748',
-      textMuted: '#718096',
+      surface: '#F5F0E6',
+      text: '#1A202C',
+      textMuted: '#4A5568',
     },
-    fonts: "font-family: 'Playfair Display', 'Georgia', serif;",
-    heroStyle: 'luxurious minimal layout with elegant serif typography and gold accents. Hero image should be a classic architecture or premium lifestyle shot.',
-    features: ['Premium serif fonts', 'Gold foil effects', 'Generous whitespace', 'Traditional elegance'],
+    fonts: "font-family: 'Georgia', 'Times New Roman', serif;",
+    heroStyle: 'elegant overlay with refined borders and gold accents',
+    features: ['Serif typography for headings', 'Elegant gold accents', 'Refined spacing', 'Classic borders'],
   },
   minimal: {
     name: 'Minimal',
-    description: 'Ultra-clean, content-focused design with maximum whitespace and Swiss-style typography.',
+    description: 'Ultra-clean design focused on content with maximum whitespace',
     colors: {
-      primary: '#000000',
-      secondary: '#333333',
-      accent: '#000000',
+      primary: '#18181B',
+      secondary: '#3F3F46',
+      accent: '#18181B',
       background: '#FFFFFF',
       surface: '#FAFAFA',
-      text: '#171717',
-      textMuted: '#737373',
+      text: '#09090B',
+      textMuted: '#71717A',
     },
-    fonts: "font-family: 'Helvetica Neue', 'Arial', sans-serif;",
-    heroStyle: 'bold typography-driven hero with absolute minimalism',
-    features: ['Radical whitespace', 'Grid systems', 'Swiss typography', 'High contrast'],
+    fonts: "font-family: 'Helvetica Neue', Arial, sans-serif;",
+    heroStyle: 'clean typography-focused hero with minimal elements',
+    features: ['Maximum whitespace', 'No decorative elements', 'Pure typography', 'Monochromatic palette'],
   },
   bold: {
     name: 'Bold',
-    description: 'High-impact, vibrant design with dark mode aesthetic and dynamic gradients.',
+    description: 'High-impact design with vibrant gradients and dynamic elements',
     colors: {
-      primary: '#8B5CF6',
-      secondary: '#EC4899',
+      primary: '#7C3AED',
+      secondary: '#DB2777',
       accent: '#F59E0B',
-      background: '#0F172A',
-      surface: '#1E293B',
-      text: '#F8FAFC',
-      textMuted: '#94A3B8',
+      background: '#0F0F23',
+      surface: '#1A1A2E',
+      text: '#FFFFFF',
+      textMuted: '#A1A1AA',
     },
-    fonts: "font-family: 'Space Grotesk', 'Poppins', sans-serif;",
-    heroStyle: 'deep dark background with vibrant glowing gradients and 3D elements',
-    features: ['Dark mode aesthetic', 'Neon glows', 'Bento grid layout', 'Dynamic animations'],
+    fonts: "font-family: 'Poppins', 'Montserrat', sans-serif;",
+    heroStyle: 'dark theme with vibrant gradient accents and animated elements',
+    features: ['Dark mode by default', 'Vibrant gradient buttons', 'Dynamic geometric shapes', 'High contrast'],
   },
   nature: {
     name: 'Nature',
-    description: 'Organic, serene design inspired by natural elements with soft textures and earthy tones.',
+    description: 'Organic, earthy design inspired by natural elements',
     colors: {
-      primary: '#059669',
-      secondary: '#047857',
-      accent: '#D97706',
-      background: '#FDFCF8',
+      primary: '#166534',
+      secondary: '#15803D',
+      accent: '#CA8A04',
+      background: '#FEFEF8',
       surface: '#F0FDF4',
-      text: '#1C1917',
-      textMuted: '#57534E',
+      text: '#14532D',
+      textMuted: '#4D7C0F',
     },
-    fonts: "font-family: 'Outfit', 'Nunito', sans-serif;",
-    heroStyle: 'soft organic shapes with natural imagery and calming colors',
-    features: ['Organic border radius', 'Natural textures', 'Soft shadows', 'Floating elements'],
+    fonts: "font-family: 'Nunito', 'Quicksand', sans-serif;",
+    heroStyle: 'organic shapes with natural textures and earthy tones',
+    features: ['Organic border radius', 'Natural color palette', 'Leaf/nature icons', 'Soft transitions'],
   },
   tech: {
     name: 'Tech',
-    description: 'Futuristic, cutting-edge design for technology leaders with cyber aesthetics.',
+    description: 'Futuristic, cutting-edge design for technology-focused businesses',
     colors: {
-      primary: '#0EA5E9',
-      secondary: '#0284C7',
-      accent: '#6366F1',
-      background: '#0B1120',
-      surface: '#151F32',
-      text: '#F1F5F9',
-      textMuted: '#94A3B8',
+      primary: '#00D9FF',
+      secondary: '#0099FF',
+      accent: '#FF00FF',
+      background: '#0A0A0F',
+      surface: '#12121A',
+      text: '#E4E4E7',
+      textMuted: '#71717A',
     },
-    fonts: "font-family: 'JetBrains Mono', 'Inter', sans-serif;",
-    heroStyle: 'technical grid background with cybernetic accents and glowing lines',
-    features: ['Cybernetic effects', 'Grid backgrounds', 'Monospace details', 'Tech-focused layout'],
-  },
-  luxury: {
-    name: 'Luxury',
-    description: 'High-end, sophisticated design with rich textures, elegant serif fonts, and gold accents.',
-    colors: {
-      primary: '#1C1917',
-      secondary: '#292524',
-      accent: '#D4AF37',
-      background: '#0C0A09',
-      surface: '#1C1917',
-      text: '#FAFAF9',
-      textMuted: '#A8A29E',
-    },
-    fonts: "font-family: 'Cinzel', 'Playfair Display', serif;",
-    heroStyle: 'dramatic dark background with gold accents and cinematic imagery',
-    features: ['Gold foil gradients', 'Cinematic imagery', 'Elegant serif typography', 'Premium spacing'],
-  },
-  startup: {
-    name: 'Startup',
-    description: 'Energetic, friendly, and trustworthy design typical of modern SaaS and tech startups.',
-    colors: {
-      primary: '#6366F1',
-      secondary: '#4F46E5',
-      accent: '#F43F5E',
-      background: '#FFFFFF',
-      surface: '#F9FAFB',
-      text: '#111827',
-      textMuted: '#6B7280',
-    },
-    fonts: "font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;",
-    heroStyle: 'clean and friendly with soft illustrations and rounded shapes',
-    features: ['Rounded corners', 'Friendly illustrations', 'Soft shadows', 'Trust badges'],
-  },
-  creative: {
-    name: 'Creative',
-    description: 'Bold, artistic, and unconventional design for agencies and portfolios.',
-    colors: {
-      primary: '#FEF08A',
-      secondary: '#FDE047',
-      accent: '#000000',
-      background: '#18181B',
-      surface: '#27272A',
-      text: '#FAFAFA',
-      textMuted: '#A1A1AA',
-    },
-    fonts: "font-family: 'Syne', 'Clash Display', sans-serif;",
-    heroStyle: 'brutalist-inspired layout with large typography and bold colors',
-    features: ['Large typography', 'Brutalist elements', 'High contrast', 'Unique grid layouts'],
+    fonts: "font-family: 'JetBrains Mono', 'Fira Code', monospace;",
+    heroStyle: 'dark cyber aesthetic with neon accents and grid patterns',
+    features: ['Neon glow effects', 'Grid background patterns', 'Monospace fonts', 'Futuristic animations'],
   },
 };
 
@@ -220,13 +197,18 @@ const generateIndustryContent = (industry: string, businessName: string) => {
   return industryContent.default;
 };
 
-serve(async (req: Request) => {
+serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const { businessName, industry, templateId, email, phone, website, leadId } = await req.json();
+
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY is not configured");
+    }
 
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
@@ -247,67 +229,7 @@ serve(async (req: Request) => {
     const template = TEMPLATE_STYLES[templateId as keyof typeof TEMPLATE_STYLES] || TEMPLATE_STYLES.modern;
     const industryContent = generateIndustryContent(industry, businessName);
 
-    // REAL AI GENERATION
-    const GOOGLE_AI_KEY = Deno.env.get("GOOGLE_AI_KEY");
-    let generatedHtml = "";
-
-    if (!GOOGLE_AI_KEY) {
-      console.log("No GOOGLE_AI_KEY found, using mock generation.");
-      generatedHtml = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${businessName} - ${industry || 'Business'}</title>
-    <style>
-        body { margin: 0; font-family: ${template.fonts.replace("font-family: ", "").replace(";", "")}; color: ${template.colors.text}; background: ${template.colors.background}; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
-        .hero { background: ${template.colors.primary}; color: white; padding: 4rem 2rem; text-align: center; }
-        .btn { display: inline-block; padding: 1rem 2rem; background: ${template.colors.accent}; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: 1rem; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; padding: 2rem 0; }
-        .card { padding: 2rem; background: ${template.colors.surface}; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-    </style>
-</head>
-<body>
-    <nav style="padding: 1rem 2rem; border-bottom: 1px solid ${template.colors.surface}; display: flex; justify-content: space-between; align-items: center;">
-        <h1 style="margin: 0; font-size: 1.5rem; color: ${template.colors.primary};">${businessName}</h1>
-        <div>
-            <a href="#contact" style="color: ${template.colors.text}; text-decoration: none;">Contact</a>
-        </div>
-    </nav>
-    <section class="hero">
-        <h1 style="font-size: 3rem; margin-bottom: 1rem;">${industryContent.tagline}</h1>
-        <p style="font-size: 1.25rem; opacity: 0.9; max-width: 600px; margin: 0 auto;">We provide top-tier ${industry || 'business'} services tailored to your needs.</p>
-        <a href="${STRIPE_PAYMENT_LINK}" class="btn">Get Started</a>
-    </section>
-    <div class="container">
-        <h2 style="text-align: center; margin-bottom: 3rem;">Our Services</h2>
-        <div class="grid">
-            ${industryContent.services.map(s => `
-            <div class="card">
-                <h3 style="color: ${template.colors.primary}; margin-top: 0;">${s}</h3>
-                <p style="color: ${template.colors.textMuted};">Professional ${s.toLowerCase()} delivered with excellence and care.</p>
-            </div>`).join('')}
-        </div>
-        <div style="background: ${template.colors.surface}; padding: 3rem; border-radius: 1rem; text-align: center; margin: 3rem 0;">
-            <h2>Why Choose Us?</h2>
-            <div class="grid" style="text-align: left;">
-                 ${industryContent.benefits.map(b => `
-                <div>
-                    <h3 style="margin-bottom: 0.5rem;">✓ ${b}</h3>
-                </div>`).join('')}
-            </div>
-        </div>
-    </div>
-    <footer style="background: ${template.colors.secondary}; color: white; padding: 3rem 2rem; text-align: center;">
-        <p>&copy; ${new Date().getFullYear()} ${businessName}. All rights reserved.</p>
-        <p>${email || ''} | ${phone || ''}</p>
-    </footer>
-    ${WATERMARK_HTML}
-</body>
-</html>`;
-    } else {
-        const systemPrompt = `You are a world-class web designer creating stunning, conversion-optimized landing pages.
+    const systemPrompt = `You are a world-class web designer creating stunning, conversion-optimized landing pages.
 Your task is to generate a complete, production-ready HTML landing page.
 
 ## DESIGN SPECIFICATIONS
@@ -352,8 +274,6 @@ ${industryContent.benefits.map((b, i) => `${i + 1}. ${b}`).join('\n')}
 5. Smooth scroll behavior and hover transitions
 6. The main CTA button MUST link to: ${STRIPE_PAYMENT_LINK}
 7. Include subtle animations (fade-in, hover effects)
-8. **IMAGES:** Use high-quality, professional placeholder images from Unsplash (via source.unsplash.com or similar reliable placeholder service) that match the industry (e.g., 'real estate', 'medical', 'gym'). Do NOT use broken image links.
-9. **LAYOUT:** Ensure sections are distinct with alternating background colors (white vs light gray) to avoid a "wall of text" look.
 
 ## REQUIRED SECTIONS (in order)
 
@@ -378,62 +298,71 @@ ${website ? `- Include link to: ${website}` : ''}
 
 Generate the complete HTML now. Do not include any markdown formatting or explanations - just the raw HTML.`;
 
-        const userPrompt = `Generate a beautiful ${template.name} style landing page for "${businessName}" in the ${industry || 'General Business'} industry. Make it look professional and conversion-focused with the Stripe payment button prominently featured.`;
+    const userPrompt = `Generate a beautiful ${template.name} style landing page for "${businessName}" in the ${industry || 'General Business'} industry. Make it look professional and conversion-focused with the Stripe payment button prominently featured.`;
 
-        console.log('Generating website for:', businessName, 'with template:', templateId);
+    console.log('Generating website for:', businessName, 'with template:', templateId);
 
-        // Call Google Gemini API directly
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GOOGLE_AI_KEY}`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                systemInstruction: {
-                    parts: [{ text: systemPrompt }]
-                },
-                contents: [{
-                    role: "user",
-                    parts: [{ text: userPrompt }]
-                }]
-            }),
-        });
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+      }),
+    });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error("Gemini API error:", response.status, errorText);
-            throw new Error(`Gemini API error: ${response.status}`);
-        }
+    if (!response.ok) {
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: "Rate limits exceeded, please try again later." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "AI usage limit reached. Please add credits to continue." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      const errorText = await response.text();
+      console.error("AI gateway error:", response.status, errorText);
+      throw new Error(`AI gateway error: ${response.status}`);
+    }
 
-        const data = await response.json();
-        // Gemini response structure
-        generatedHtml = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const data = await response.json();
+    const generatedHtml = data.choices?.[0]?.message?.content || '';
 
-        // Extract HTML from markdown code blocks if present
-        const htmlMatch = generatedHtml.match(/```html\n?([\s\S]*?)```/);
-        if (htmlMatch) {
-            generatedHtml = htmlMatch[1].trim();
-        } else {
-            const codeMatch = generatedHtml.match(/```\n?([\s\S]*?)```/);
-            if (codeMatch) {
-                generatedHtml = codeMatch[1].trim();
-            }
-        }
-        
-        // Ensure the HTML starts with DOCTYPE if it was stripped
-        if (!generatedHtml.toLowerCase().startsWith('<!doctype')) {
-        if (generatedHtml.toLowerCase().startsWith('<html')) {
-            generatedHtml = '<!DOCTYPE html>\n' + generatedHtml;
-        }
-        }
+    // Extract HTML from markdown code blocks if present
+    let cleanHtml = generatedHtml;
+    const htmlMatch = generatedHtml.match(/```html\n?([\s\S]*?)```/);
+    if (htmlMatch) {
+      cleanHtml = htmlMatch[1].trim();
+    } else {
+      const codeMatch = generatedHtml.match(/```\n?([\s\S]*?)```/);
+      if (codeMatch) {
+        cleanHtml = codeMatch[1].trim();
+      }
+    }
 
-        // Inject the watermark before the closing body tag
-        if (generatedHtml.toLowerCase().includes('</body>')) {
-        generatedHtml = generatedHtml.replace(/<\/body>/i, `${WATERMARK_HTML}\n</body>`);
-        } else {
-        // If no body tag, append to the end
-        generatedHtml += WATERMARK_HTML;
-        }
+    // Ensure the HTML starts with DOCTYPE if it was stripped
+    if (!cleanHtml.toLowerCase().startsWith('<!doctype')) {
+      if (cleanHtml.toLowerCase().startsWith('<html')) {
+        cleanHtml = '<!DOCTYPE html>\n' + cleanHtml;
+      }
+    }
+
+    // Inject the watermark before the closing body tag
+    if (cleanHtml.toLowerCase().includes('</body>')) {
+      cleanHtml = cleanHtml.replace(/<\/body>/i, `${WATERMARK_HTML}\n</body>`);
+    } else {
+      // If no body tag, append to the end
+      cleanHtml += WATERMARK_HTML;
     }
 
     console.log('Website generated successfully, saving to database...');
@@ -445,7 +374,7 @@ Generate the complete HTML now. Do not include any markdown formatting or explan
         lead_id: leadId || null,
         business_name: businessName,
         template_id: templateId,
-        html_content: generatedHtml,
+        html_content: cleanHtml,
       })
       .select('public_id')
       .single();
@@ -460,7 +389,7 @@ Generate the complete HTML now. Do not include any markdown formatting or explan
     return new Response(
       JSON.stringify({ 
         success: true, 
-        html: generatedHtml,
+        html: cleanHtml,
         publicId: websiteData.public_id,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }

@@ -15,7 +15,6 @@ import {
   Edit,
   UserPlus,
   LayoutTemplate,
-  RefreshCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -33,8 +32,6 @@ import {
   useAddLeadNote,
   LeadStatus,
 } from '@/hooks/useLeads';
-import { supabase } from '@/integrations/supabase/client';
-import { useQueryClient } from '@tanstack/react-query';
 
 interface LeadDrawerProps {
   leadId: string | null;
@@ -50,8 +47,6 @@ const activityIcons: Record<string, React.ElementType> = {
   status_changed: Clock,
 };
 
-import { CreateProposalWizard } from '@/components/proposals/CreateProposalWizard';
-
 export function LeadDrawer({ leadId, open, onOpenChange }: LeadDrawerProps) {
   const { data: lead, isLoading: leadLoading } = useLead(leadId);
   const { data: notes = [], isLoading: notesLoading } = useLeadNotes(leadId);
@@ -59,66 +54,11 @@ export function LeadDrawer({ leadId, open, onOpenChange }: LeadDrawerProps) {
   const addNote = useAddLeadNote();
   const [newNote, setNewNote] = useState('');
   const [showWebsiteModal, setShowWebsiteModal] = useState(false);
-  const [showProposalWizard, setShowProposalWizard] = useState(false);
-  const [isScoring, setIsScoring] = useState(false);
-  const [isSendingN8n, setIsSendingN8n] = useState(false);
-  const queryClient = useQueryClient();
 
   const handleAddNote = async () => {
     if (!leadId || !newNote.trim()) return;
     await addNote.mutateAsync({ leadId, content: newNote.trim() });
     setNewNote('');
-  };
-
-  const handleRefreshScore = async () => {
-    if (!leadId) return;
-    setIsScoring(true);
-    try {
-        const { data, error } = await supabase.functions.invoke('qualify-lead', {
-            body: { leadId }
-        });
-
-        if (error) throw error;
-
-        if (data.success) {
-            toast.success(data.message);
-            queryClient.invalidateQueries({ queryKey: ['lead', leadId] });
-            queryClient.invalidateQueries({ queryKey: ['leads'] });
-        }
-    } catch (error) {
-        console.error(error);
-        toast.error('Failed to update score');
-    } finally {
-        setIsScoring(false);
-    }
-  };
-
-  const handleSendToN8n = async () => {
-    if (!lead) return;
-    setIsSendingN8n(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('n8n-proxy', {
-        body: {
-          action: 'process_lead',
-          payload: lead
-        }
-      });
-
-      if (error) {
-        if (error.message && error.message.includes("N8N_WEBHOOK_URL is not set")) {
-          toast.error("Configuration Error: N8N Webhook URL is missing in backend secrets.");
-        } else {
-          throw error;
-        }
-      } else {
-        toast.success(data?.message || 'Sent to n8n successfully');
-      }
-    } catch (error: any) {
-      console.error('Error sending to n8n:', error);
-      toast.error('Failed to send to n8n: ' + (error.message || 'Unknown error'));
-    } finally {
-      setIsSendingN8n(false);
-    }
   };
 
   return (
@@ -157,6 +97,10 @@ export function LeadDrawer({ leadId, open, onOpenChange }: LeadDrawerProps) {
                     )}
                   </div>
                   <LeadStatusBadge status={lead.status as LeadStatus} />
+                </div>
+                <div className="flex items-center gap-4">
+                  <AIScoreIndicator score={lead.ai_score} />
+                  <span className="text-xs text-muted-foreground">AI Score</span>
                 </div>
               </div>
 
@@ -221,23 +165,11 @@ export function LeadDrawer({ leadId, open, onOpenChange }: LeadDrawerProps) {
               {/* Actions */}
               <div className="space-y-3">
                 <div className="flex gap-3">
-                  <Button 
-                    className="flex-1 gap-2"
-                    onClick={handleSendToN8n}
-                    disabled={isSendingN8n}
-                  >
-                    {isSendingN8n ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                        <Send className="h-4 w-4" />
-                    )}
-                    Send to n8n
+                  <Button className="flex-1 gap-2">
+                    <Send className="h-4 w-4" />
+                    Send to Outreach
                   </Button>
-                  <Button 
-                    variant="secondary" 
-                    className="flex-1 gap-2"
-                    onClick={() => setShowProposalWizard(true)}
-                  >
+                  <Button variant="secondary" className="flex-1 gap-2">
                     <FileText className="h-4 w-4" />
                     Create Proposal
                   </Button>
@@ -351,22 +283,6 @@ export function LeadDrawer({ leadId, open, onOpenChange }: LeadDrawerProps) {
             email: lead.email,
             phone: lead.phone,
             website: lead.website,
-          }}
-        />
-      )}
-
-      {showProposalWizard && lead && (
-        <CreateProposalWizard
-          onClose={() => setShowProposalWizard(false)}
-          onComplete={() => {
-            setShowProposalWizard(false);
-            toast.success('Proposal created successfully');
-          }}
-          initialData={{
-            client_name: lead.business_name,
-            client_email: lead.email || '',
-            client_business: lead.industry || '',
-            lead_id: lead.id,
           }}
         />
       )}

@@ -132,29 +132,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
       description: `Lead created via ${payload.source || "webhook"}`,
     });
 
-    // TRIGGER ENRICHMENT
-    try {
-        console.log("Triggering enrichment for inbound webhook lead...");
-        const N8N_WEBHOOK_URL = Deno.env.get("N8N_WEBHOOK_URL");
-        const N8N_TOKEN = Deno.env.get("N8N_BEARER_TOKEN");
-        
-        if (N8N_WEBHOOK_URL) {
-             await fetch(N8N_WEBHOOK_URL, {
-                method: "POST",
-                headers: { 
-                    "Content-Type": "application/json",
-                    "Authorization": N8N_TOKEN ? `Bearer ${N8N_TOKEN}` : ""
-                },
-                body: JSON.stringify({ 
-                    action: "enrich_and_create_marketing",
-                    leads: [lead] 
-                })
-            });
-        }
-    } catch (err) {
-        console.error("Failed to trigger enrichment webhook:", err);
-    }
-
     // Trigger outbound webhooks for "new_lead" event
     const { data: webhooks } = await supabase
       .from("webhooks")
