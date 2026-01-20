@@ -14,7 +14,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { LeadFilters, LeadStatus } from '@/hooks/useLeads';
+import { LeadFilters, LeadStatus, LeadSource } from '@/hooks/useLeads';
 import { cn } from '@/lib/utils';
 
 const industries = [
@@ -38,6 +38,7 @@ interface LeadsFiltersProps {
 export function LeadsFilters({ filters, onFiltersChange }: LeadsFiltersProps) {
   const hasActiveFilters =
     filters.status !== 'all' ||
+    (filters.source && filters.source !== 'all') ||
     filters.industry !== '' ||
     filters.dateRange.from !== null ||
     filters.dateRange.to !== null;
@@ -46,6 +47,7 @@ export function LeadsFilters({ filters, onFiltersChange }: LeadsFiltersProps) {
     onFiltersChange({
       ...filters,
       status: 'all',
+      source: 'all',
       industry: '',
       dateRange: { from: null, to: null },
     });
@@ -68,6 +70,24 @@ export function LeadsFilters({ filters, onFiltersChange }: LeadsFiltersProps) {
           <SelectItem value="contacted">Contacted</SelectItem>
           <SelectItem value="qualified">Qualified</SelectItem>
           <SelectItem value="not_interested">Not Interested</SelectItem>
+        </SelectContent>
+      </Select>
+
+      <Select
+        value={filters.source || 'all'}
+        onValueChange={(value) =>
+          onFiltersChange({ ...filters, source: value as LeadSource | 'all' })
+        }
+      >
+        <SelectTrigger className="w-36 bg-muted/50 border-border">
+          <SelectValue placeholder="Source" />
+        </SelectTrigger>
+        <SelectContent className="bg-popover border-border">
+          <SelectItem value="all">All Sources</SelectItem>
+          <SelectItem value="manual">Manual</SelectItem>
+          <SelectItem value="webhook">Webhook</SelectItem>
+          <SelectItem value="import">Import</SelectItem>
+          <SelectItem value="website">Website</SelectItem>
         </SelectContent>
       </Select>
 

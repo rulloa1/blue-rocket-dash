@@ -19,6 +19,7 @@ export default function Leads() {
   const [filters, setFilters] = useState<LeadFilters>({
     search: '',
     status: 'all',
+    source: 'all',
     industry: '',
     dateRange: { from: null, to: null },
   });
