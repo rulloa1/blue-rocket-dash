@@ -23,6 +23,9 @@ export interface UserSettings {
   notify_deal_stage_change: boolean;
   email_notifications: boolean;
   inbound_webhook_token: string;
+  airtable_api_key: string | null;
+  airtable_base_id: string | null;
+  airtable_table_name: string | null;
   created_at: string;
   updated_at: string;
 }

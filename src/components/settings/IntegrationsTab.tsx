@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Copy, Plus, Trash2, Play, ExternalLink, Webhook } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Copy, Plus, Trash2, Play, ExternalLink, Webhook, Table } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import {
   useSettings,
+  useUpdateSettings,
   useWebhooks,
   useCreateWebhook,
   useUpdateWebhook,
@@ -53,6 +54,7 @@ const TRIGGER_EVENTS = [
 
 export function IntegrationsTab() {
   const { data: settings, isLoading: loadingSettings } = useSettings();
+  const updateSettings = useUpdateSettings();
   const { data: webhooks, isLoading: loadingWebhooks } = useWebhooks();
   const createWebhook = useCreateWebhook();
   const updateWebhook = useUpdateWebhook();
@@ -66,6 +68,22 @@ export function IntegrationsTab() {
     url: '',
     trigger_event: 'new_lead',
   });
+
+  const [airtableConfig, setAirtableConfig] = useState({
+    apiKey: '',
+    baseId: '',
+    tableName: '',
+  });
+
+  useEffect(() => {
+    if (settings) {
+      setAirtableConfig({
+        apiKey: settings.airtable_api_key || '',
+        baseId: settings.airtable_base_id || '',
+        tableName: settings.airtable_table_name || '',
+      });
+    }
+  }, [settings]);
 
   const webhookUrl = settings?.inbound_webhook_token
     ? `${window.location.origin}/api/webhook/inbound`
@@ -101,6 +119,14 @@ export function IntegrationsTab() {
     }
   };
 
+  const handleSaveAirtable = () => {
+    updateSettings.mutate({
+      airtable_api_key: airtableConfig.apiKey || null,
+      airtable_base_id: airtableConfig.baseId || null,
+      airtable_table_name: airtableConfig.tableName || null,
+    });
+  };
+
   if (loadingSettings || loadingWebhooks) {
     return (
       <div className="space-y-6">
@@ -112,6 +138,60 @@ export function IntegrationsTab() {
 
   return (
     <div className="space-y-8">
+      {/* Airtable Integration */}
+      <div>
+        <h3 className="text-lg font-medium mb-2 flex items-center gap-2">
+          <Table className="h-5 w-5" />
+          Airtable Integration
+        </h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Connect your Airtable base to sync leads
+        </p>
+
+        <div className="rounded-lg border border-border bg-card p-4 space-y-4">
+          <div className="space-y-2">
+            <Label>Personal Access Token</Label>
+            <Input
+              type="password"
+              value={airtableConfig.apiKey}
+              onChange={(e) => setAirtableConfig({ ...airtableConfig, apiKey: e.target.value })}
+              placeholder="pat..."
+            />
+            <p className="text-xs text-muted-foreground">
+              Create a token with <code>data.records:read</code> and <code>data.records:write</code> scopes
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Base ID</Label>
+              <Input
+                value={airtableConfig.baseId}
+                onChange={(e) => setAirtableConfig({ ...airtableConfig, baseId: e.target.value })}
+                placeholder="app..."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Table Name</Label>
+              <Input
+                value={airtableConfig.tableName}
+                onChange={(e) => setAirtableConfig({ ...airtableConfig, tableName: e.target.value })}
+                placeholder="Leads"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <Button onClick={handleSaveAirtable} disabled={updateSettings.isPending}>
+              Save Configuration
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <Separator />
+
       {/* Inbound Webhook */}
       <div>
         <h3 className="text-lg font-medium mb-2">Inbound Webhook</h3>
