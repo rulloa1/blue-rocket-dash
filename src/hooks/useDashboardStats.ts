@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface PipelineStage {
   stage: string;
@@ -55,6 +56,9 @@ export function useDashboardStats() {
         activeClients: clientsResult.count ?? 0,
         pipelineStages,
       };
+    },
+  });
+}
     },
   });
 }
