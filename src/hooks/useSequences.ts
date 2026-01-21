@@ -17,7 +17,8 @@ export function useSequences() {
       const { data, error } = await supabase
         .from('sequences')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(50);
 
       if (error) throw error;
       return data as Sequence[];
