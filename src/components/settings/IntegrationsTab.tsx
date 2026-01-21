@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Copy, Plus, Trash2, Play, ExternalLink, Webhook, Table } from 'lucide-react';
+import { Copy, Plus, Trash2, Play, ExternalLink, Webhook, Table, RefreshCw } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -182,7 +182,15 @@ export function IntegrationsTab() {
             </div>
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => syncAirtable.mutate()} 
+              disabled={syncAirtable.isPending || !settings?.airtable_api_key}
+            >
+              <RefreshCw className={`mr-2 h-4 w-4 ${syncAirtable.isPending ? 'animate-spin' : ''}`} />
+              Sync Now
+            </Button>
             <Button onClick={handleSaveAirtable} disabled={updateSettings.isPending}>
               Save Configuration
             </Button>

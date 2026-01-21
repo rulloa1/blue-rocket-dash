@@ -206,6 +206,26 @@ export function useDeleteWebhook() {
   });
 }
 
+export function useSyncAirtable() {
+  return useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('sync-airtable');
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      if (data.success) {
+        toast.success(`Synced ${data.results.created} leads to Airtable`);
+      } else {
+        toast.error('Sync failed: ' + (data.error || 'Unknown error'));
+      }
+    },
+    onError: (error) => {
+      toast.error('Failed to sync with Airtable: ' + error.message);
+    },
+  });
+}
+
 export function useTestWebhook() {
   return useMutation({
     mutationFn: async (url: string) => {
