@@ -10,6 +10,14 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -118,6 +126,7 @@ export function WebsiteTemplateModal({
   // Email editing state
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [emailInput, setEmailInput] = useState('');
+  const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
   const updateLead = useUpdateLead();
   
   // Track lead email locally for immediate UI updates
@@ -491,18 +500,47 @@ export function WebsiteTemplateModal({
             </div>
 
             {/* Main content area with larger preview and edit panel */}
-            <div className="flex-1 flex gap-3 min-h-0">
+            <div className="flex-1 flex gap-3 min-h-0 relative">
               {/* Preview iframe */}
               <div className={cn(
-                "relative rounded-lg border border-border overflow-hidden bg-white transition-all",
+                "relative rounded-lg border border-border overflow-hidden bg-muted/10 flex flex-col transition-all",
                 showEditPanel ? "flex-1" : "w-full"
               )}>
-                <iframe
-                  srcDoc={generatedHtml}
-                  className="w-full h-full min-h-[350px]"
-                  title="Website Preview"
-                  sandbox="allow-scripts"
-                />
+                {/* Device toggle */}
+                <div className="flex justify-center items-center gap-2 p-2 border-b border-border bg-card">
+                  <Button
+                    variant={previewDevice === 'desktop' ? 'secondary' : 'ghost'}
+                    size="sm"
+                    onClick={() => setPreviewDevice('desktop')}
+                    className="h-7 w-7 p-0"
+                  >
+                    <Monitor className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={previewDevice === 'mobile' ? 'secondary' : 'ghost'}
+                    size="sm"
+                    onClick={() => setPreviewDevice('mobile')}
+                    className="h-7 w-7 p-0"
+                  >
+                    <Smartphone className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <div className="flex-1 overflow-auto p-4 flex justify-center bg-muted/20">
+                  <div className={cn(
+                    "transition-all duration-300 bg-white shadow-lg overflow-hidden flex-shrink-0",
+                    previewDevice === 'mobile' 
+                      ? "w-[375px] h-[667px] rounded-[3rem] border-[8px] border-gray-800" 
+                      : "w-full h-full min-h-[500px] rounded-lg border border-border"
+                  )}>
+                    <iframe
+                      srcDoc={generatedHtml}
+                      className="w-full h-full"
+                      title="Website Preview"
+                      sandbox="allow-scripts"
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Edit panel */}
@@ -680,6 +718,41 @@ export function WebsiteTemplateModal({
                   </button>
                 );
               })}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 pt-2">
+              <div className="space-y-2">
+                <Label>Primary Color</Label>
+                <div className="flex gap-2">
+                  <Input 
+                    type="color" 
+                    value={customColor} 
+                    onChange={(e) => setCustomColor(e.target.value)}
+                    className="w-12 h-10 p-1 cursor-pointer"
+                  />
+                  <Input 
+                    value={customColor} 
+                    onChange={(e) => setCustomColor(e.target.value)}
+                    placeholder="#000000"
+                    className="flex-1"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Tone of Voice</Label>
+                <Select value={tone} onValueChange={setTone}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Professional">Professional</SelectItem>
+                    <SelectItem value="Friendly">Friendly</SelectItem>
+                    <SelectItem value="Urgent">Urgent / Sales-focused</SelectItem>
+                    <SelectItem value="Luxury">Luxury / Elegant</SelectItem>
+                    <SelectItem value="Playful">Playful / Fun</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="flex gap-3 pt-2">

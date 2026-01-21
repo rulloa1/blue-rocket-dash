@@ -226,7 +226,13 @@ serve(async (req) => {
       throw new Error("Invalid authentication token");
     }
 
-    const template = TEMPLATE_STYLES[templateId as keyof typeof TEMPLATE_STYLES] || TEMPLATE_STYLES.modern;
+    const template = { ...TEMPLATE_STYLES[templateId as keyof typeof TEMPLATE_STYLES] } || { ...TEMPLATE_STYLES.modern };
+    
+    // Override primary color if provided
+    if (customColor) {
+      template.colors = { ...template.colors, primary: customColor };
+    }
+
     const industryContent = generateIndustryContent(industry, businessName);
 
     const systemPrompt = `You are a world-class web designer creating stunning, conversion-optimized landing pages.
@@ -236,6 +242,8 @@ Your task is to generate a complete, production-ready HTML landing page.
 
 **Template: ${template.name}**
 ${template.description}
+
+**Tone of Voice:** ${tone || 'Professional and trustworthy'}
 
 **Color Palette:**
 - Primary: ${template.colors.primary}
