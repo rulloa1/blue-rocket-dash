@@ -23,6 +23,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 import { useCreateSequence, useAddSequenceStep, useUpdateSequence } from '@/hooks/useSequences';
 
 const formSchema = z.object({
@@ -41,6 +42,13 @@ interface CreateSequenceModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+const VARIABLES = [
+  { label: 'First Name', value: '{{first_name}}' },
+  { label: 'Last Name', value: '{{last_name}}' },
+  { label: 'Company', value: '{{company}}' },
+  { label: 'Website', value: '{{website}}' },
+];
 
 export function CreateSequenceModal({ open, onOpenChange }: CreateSequenceModalProps) {
   const [steps, setSteps] = useState<EmailStep[]>([
@@ -73,6 +81,29 @@ export function CreateSequenceModal({ open, onOpenChange }: CreateSequenceModalP
 
   const updateStep = (id: string, field: keyof EmailStep, value: string | number) => {
     setSteps(steps.map((s) => (s.id === id ? { ...s, [field]: value } : s)));
+  };
+
+  const insertVariable = (stepId: string, variable: string) => {
+    const textarea = document.getElementById(`step-body-${stepId}`) as HTMLTextAreaElement;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const text = textarea.value;
+      const newText = text.substring(0, start) + variable + text.substring(end);
+      
+      updateStep(stepId, 'body', newText);
+      
+      // Restore cursor
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + variable.length;
+        textarea.focus();
+      }, 0);
+    } else {
+      const step = steps.find(s => s.id === stepId);
+      if (step) {
+        updateStep(stepId, 'body', step.body + variable);
+      }
+    }
   };
 
   const handleSubmit = async (data: z.infer<typeof formSchema>, activate: boolean) => {
@@ -214,12 +245,27 @@ export function CreateSequenceModal({ open, onOpenChange }: CreateSequenceModalP
                       onChange={(e) => updateStep(step.id, 'subject', e.target.value)}
                     />
 
-                    <Textarea
-                      placeholder="Email body (use {{first_name}}, {{company}} for personalization)"
-                      rows={4}
-                      value={step.body}
-                      onChange={(e) => updateStep(step.id, 'body', e.target.value)}
-                    />
+                    <div className="space-y-2">
+                      <div className="flex gap-1 flex-wrap">
+                        {VARIABLES.map((v) => (
+                          <Badge
+                            key={v.value}
+                            variant="outline"
+                            className="cursor-pointer hover:bg-muted text-xs"
+                            onClick={() => insertVariable(step.id, v.value)}
+                          >
+                            {v.label}
+                          </Badge>
+                        ))}
+                      </div>
+                      <Textarea
+                        id={`step-body-${step.id}`}
+                        placeholder="Email body (use variables above for personalization)"
+                        rows={4}
+                        value={step.body}
+                        onChange={(e) => updateStep(step.id, 'body', e.target.value)}
+                      />
+                    </div>
                   </div>
                 ))}
               </div>

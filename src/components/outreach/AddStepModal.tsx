@@ -20,6 +20,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import { useAddSequenceStep } from '@/hooks/useSequences';
 
 const formSchema = z.object({
@@ -35,6 +36,13 @@ interface AddStepModalProps {
   nextOrder: number;
 }
 
+const VARIABLES = [
+  { label: 'First Name', value: '{{first_name}}' },
+  { label: 'Last Name', value: '{{last_name}}' },
+  { label: 'Company', value: '{{company}}' },
+  { label: 'Website', value: '{{website}}' },
+];
+
 export function AddStepModal({ open, onOpenChange, sequenceId, nextOrder }: AddStepModalProps) {
   const addStep = useAddSequenceStep();
 
@@ -46,6 +54,25 @@ export function AddStepModal({ open, onOpenChange, sequenceId, nextOrder }: AddS
       delay_days: nextOrder === 1 ? 0 : 2,
     },
   });
+
+  const insertVariable = (variable: string) => {
+    const textarea = document.getElementById('step-body') as HTMLTextAreaElement;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const text = textarea.value;
+      const newText = text.substring(0, start) + variable + text.substring(end);
+      form.setValue('body', newText, { shouldDirty: true });
+      // Restore cursor
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + variable.length;
+        textarea.focus();
+      }, 0);
+    } else {
+      const current = form.getValues('body');
+      form.setValue('body', current + variable, { shouldDirty: true });
+    }
+  };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
@@ -119,10 +146,25 @@ export function AddStepModal({ open, onOpenChange, sequenceId, nextOrder }: AddS
               name="body"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email Body</FormLabel>
+                  <div className="flex items-center justify-between">
+                    <FormLabel>Email Body</FormLabel>
+                    <div className="flex gap-1">
+                      {VARIABLES.map((v) => (
+                        <Badge
+                          key={v.value}
+                          variant="outline"
+                          className="cursor-pointer hover:bg-muted"
+                          onClick={() => insertVariable(v.value)}
+                        >
+                          {v.label}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
                   <FormControl>
                     <Textarea
-                      placeholder="Use {{first_name}}, {{company}}, {{website}} for personalization"
+                      id="step-body"
+                      placeholder="Use variables above for personalization..."
                       rows={8}
                       {...field}
                     />

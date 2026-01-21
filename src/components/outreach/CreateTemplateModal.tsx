@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useCreateTemplate, useUpdateTemplate } from '@/hooks/useTemplates';
 import type { Tables } from '@/integrations/supabase/types';
+import { Badge } from '@/components/ui/badge';
 
 type EmailTemplate = Tables<'email_templates'>;
 
@@ -37,6 +38,13 @@ interface CreateTemplateModalProps {
   onOpenChange: (open: boolean) => void;
   template?: EmailTemplate | null;
 }
+
+const VARIABLES = [
+  { label: 'First Name', value: '{{first_name}}' },
+  { label: 'Last Name', value: '{{last_name}}' },
+  { label: 'Company', value: '{{company}}' },
+  { label: 'Website', value: '{{website}}' },
+];
 
 export function CreateTemplateModal({ open, onOpenChange, template }: CreateTemplateModalProps) {
   const createTemplate = useCreateTemplate();
@@ -67,6 +75,25 @@ export function CreateTemplateModal({ open, onOpenChange, template }: CreateTemp
       });
     }
   }, [template, form]);
+
+  const insertVariable = (variable: string) => {
+    const textarea = document.getElementById('template-body') as HTMLTextAreaElement;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const text = textarea.value;
+      const newText = text.substring(0, start) + variable + text.substring(end);
+      form.setValue('body', newText, { shouldDirty: true });
+      // Restore cursor
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + variable.length;
+        textarea.focus();
+      }, 0);
+    } else {
+      const current = form.getValues('body');
+      form.setValue('body', current + variable, { shouldDirty: true });
+    }
+  };
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
@@ -140,10 +167,25 @@ export function CreateTemplateModal({ open, onOpenChange, template }: CreateTemp
               name="body"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email Body</FormLabel>
+                  <div className="flex items-center justify-between">
+                    <FormLabel>Email Body</FormLabel>
+                    <div className="flex gap-1">
+                      {VARIABLES.map((v) => (
+                        <Badge
+                          key={v.value}
+                          variant="outline"
+                          className="cursor-pointer hover:bg-muted"
+                          onClick={() => insertVariable(v.value)}
+                        >
+                          {v.label}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
                   <FormControl>
                     <Textarea
-                      placeholder="Use {{first_name}}, {{company}}, {{website}} for personalization"
+                      id="template-body"
+                      placeholder="Use variables above for personalization..."
                       rows={10}
                       {...field}
                     />
