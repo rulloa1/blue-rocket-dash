@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface PipelineStage {
   stage: string;
@@ -25,9 +26,13 @@ const STAGE_LABELS: Record<string, string> = {
 };
 
 export function useDashboardStats() {
+  const { user } = useAuth();
+
   return useQuery({
-    queryKey: ['dashboard-stats'],
+    queryKey: ['dashboard-stats', user?.id],
     queryFn: async (): Promise<DashboardStats> => {
+      if (!user) throw new Error('Not authenticated');
+
       const [leadsResult, qualifiedResult, proposalsResult, clientsResult, dealsResult] = await Promise.all([
         supabase.from('leads').select('id', { count: 'exact', head: true }),
         supabase.from('leads').select('id', { count: 'exact', head: true }).eq('status', 'qualified'),
@@ -56,5 +61,6 @@ export function useDashboardStats() {
         pipelineStages,
       };
     },
+    enabled: !!user,
   });
 }
