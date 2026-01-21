@@ -1,64 +1,77 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+const WEBHOOK_URLS = {
+  'call-lead': Deno.env.get('N8N_WEBHOOK_CALL_LEAD'),
+  'message-lead': Deno.env.get('N8N_WEBHOOK_MESSAGE_LEAD'),
+  'activate-site': Deno.env.get('N8N_WEBHOOK_ACTIVATE_SITE'),
+  'run-batch': 'http://localhost:5680/webhook/run-batch',
 };
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { action, payload } = await req.json();
+    const { action, ...data } = await req.json();
 
-    // Use the configured URL and Token
-    const N8N_WEBHOOK_URL = Deno.env.get("N8N_WEBHOOK_URL");
-    const N8N_TOKEN = Deno.env.get("N8N_BEARER_TOKEN");
+    console.log(`Proxying request to n8n: action=${action}`, data);
 
-    if (!N8N_WEBHOOK_URL) {
-        throw new Error("N8N_WEBHOOK_URL is not set");
+    const webhookUrl = WEBHOOK_URLS[action as keyof typeof WEBHOOK_URLS];
+
+    if (!webhookUrl) {
+      console.error(`Invalid action or missing webhook URL for: ${action}`);
+      return new Response(
+        JSON.stringify({ error: 'Invalid or unconfigured action', validActions: Object.keys(WEBHOOK_URLS) }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    console.log(`Forwarding ${action} to n8n at ${N8N_WEBHOOK_URL}`);
+    const N8N_TOKEN = Deno.env.get('N8N_TOKEN');
 
-    const response = await fetch(N8N_WEBHOOK_URL, {
-        method: "POST",
-        headers: { 
-            "Content-Type": "application/json",
-            "Authorization": N8N_TOKEN ? `Bearer ${N8N_TOKEN}` : ""
-        },
-        body: JSON.stringify({ action, ...payload })
+    console.log(`Calling n8n webhook: ${webhookUrl}`);
+
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (N8N_TOKEN) {
+      headers['Authorization'] = `Bearer ${N8N_TOKEN}`; // or 'X-N8N-API-KEY' depending on setup, usually Bearer for JWT
+    }
+
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data),
     });
-    
-    // Check if the request was successful
-    if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`n8n responded with ${response.status}: ${errorText}`);
-    }
 
-    const data = await response.json();
+    const responseText = await response.text();
+    console.log(`n8n response status: ${response.status}, body: ${responseText}`);
+
+    // Try to parse as JSON, otherwise return as text
+    let responseData;
+    try {
+      responseData = JSON.parse(responseText);
+    } catch {
+      responseData = { message: responseText || 'Request processed' };
+    }
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        message: `Successfully forwarded to n8n`,
-        n8n_response: data
-      }),
+      JSON.stringify(responseData),
       {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
+        status: response.status,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
 
-  } catch (error: any) {
+  } catch (error) {
+    console.error('Error proxying to Make.com:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400,
-      }
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Failed to process request' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

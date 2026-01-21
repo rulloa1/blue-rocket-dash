@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { Palette, Sparkles, Layers, Zap, Loader2, Check, ExternalLink, Download, Copy, Link, Leaf, Cpu, Wand2, Send, RotateCcw, Mail, Pencil, X, Eye, Plus, LayoutTemplate } from 'lucide-react';
+import { Palette, Sparkles, Layers, Zap, Loader2, Check, ExternalLink, Download, Copy, Link, Leaf, Cpu, Wand2, Send, RotateCcw, Mail, Pencil, X, Eye } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -36,17 +34,7 @@ interface WebsiteTemplateModalProps {
   onLeadUpdate?: () => void;
 }
 
-import { KONTAKO_TEMPLATE } from '@/data/kontakoTemplate';
-
 const WEBSITE_TEMPLATES = [
-  {
-    id: 'kontako',
-    name: 'Kontako Modern',
-    description: 'Ultra-modern dark theme with orange accents for architecture and luxury.',
-    icon: LayoutTemplate,
-    preview: 'bg-[#0f0f0f] border-[#ff4d1c]',
-    features: ['Dark Mode', 'Smooth Scroll', 'Modern Forms'],
-  },
   {
     id: 'modern',
     name: 'Modern',
@@ -95,30 +83,6 @@ const WEBSITE_TEMPLATES = [
     preview: 'bg-gradient-to-br from-cyan-400/30 via-blue-600/20 to-fuchsia-500/30',
     features: ['Neon effects', 'Grid patterns', 'Monospace fonts'],
   },
-  {
-    id: 'luxury',
-    name: 'Luxury',
-    description: 'High-end, sophisticated design with gold accents',
-    icon: Sparkles,
-    preview: 'bg-gradient-to-br from-yellow-500/20 via-neutral-900/90 to-yellow-600/20',
-    features: ['Gold foil gradients', 'Elegant serif typography', 'Premium spacing'],
-  },
-  {
-    id: 'startup',
-    name: 'Startup',
-    description: 'Energetic, friendly, and trustworthy design for modern companies',
-    icon: Zap,
-    preview: 'bg-gradient-to-br from-indigo-500/20 via-purple-500/10 to-pink-500/20',
-    features: ['Rounded corners', 'Friendly illustrations', 'Trust badges'],
-  },
-  {
-    id: 'creative',
-    name: 'Creative',
-    description: 'Bold, artistic, and unconventional design for agencies',
-    icon: Palette,
-    preview: 'bg-gradient-to-br from-yellow-300/30 via-black/80 to-yellow-400/30',
-    features: ['Large typography', 'Brutalist elements', 'High contrast'],
-  },
 ];
 
 const QUICK_EDIT_SUGGESTIONS = [
@@ -155,67 +119,9 @@ export function WebsiteTemplateModal({
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [emailInput, setEmailInput] = useState('');
   const updateLead = useUpdateLead();
-  const navigate = useNavigate();
   
   // Track lead email locally for immediate UI updates
   const [localLeadEmail, setLocalLeadEmail] = useState(lead.email);
-
-  // Fetch custom templates
-  const { data: customTemplates = [] } = useQuery({
-    queryKey: ['website-templates'],
-    queryFn: async () => {
-      let dbTemplates: any[] = [];
-      try {
-        const { data, error } = await supabase
-          .from('website_templates')
-          .select('*')
-          .eq('is_active', true)
-          .order('created_at', { ascending: false });
-        
-        if (error) throw error;
-        dbTemplates = data.map(t => ({
-          id: t.id,
-          name: t.name,
-          description: t.description || 'Custom uploaded template',
-          icon: LayoutTemplate,
-          preview: 'bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300',
-          features: ['Custom Design', 'Uploaded'],
-          isCustom: true,
-          html_content: t.html_content
-        }));
-      } catch (err) {
-        console.warn('Failed to fetch templates from DB', err);
-      }
-      
-      // Always fetch local templates
-      let localTemplates: any[] = [];
-      try {
-          const raw = localStorage.getItem('local_templates');
-          if (raw) {
-              const parsed = JSON.parse(raw);
-              if (Array.isArray(parsed)) {
-                  localTemplates = parsed.map((t: any) => ({
-                      id: t.id,
-                      name: t.name,
-                      description: t.description || 'Custom uploaded template (Local)',
-                      icon: LayoutTemplate,
-                      preview: 'bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300',
-                      features: ['Custom Design', 'Local Storage'],
-                      isCustom: true,
-                      html_content: t.html_content
-                  }));
-              }
-          }
-      } catch (e) {
-          console.warn("Error parsing local templates", e);
-      }
-
-      return [...localTemplates, ...dbTemplates];
-    },
-  });
-
-  // Merge hardcoded and custom templates
-  const allTemplates = [...customTemplates, ...WEBSITE_TEMPLATES];
   
   // Sync local email when lead prop changes
   useEffect(() => {
@@ -272,217 +178,45 @@ export function WebsiteTemplateModal({
     setEmailInput('');
   };
 
-  // --- Helper to Generate HTML Locally ---
-  const generateLocalHtml = (templateContent: string, data: any) => {
-    let html = templateContent;
-    
-    // Fallback data
-    const agentName = data.agent_name || 'Agent Name';
-    const email = data.email || 'agent@example.com';
-    const phone = data.phone || '';
-    const city = data.city_area || 'Your City';
-
-    // Agent Config for Luxury Template
-    const agentConfig = {
-        name: agentName,
-        title: "Luxury Real Estate",
-        brokerage: data.brokerage || "Real Estate Brokerage",
-        location: `${city}, TX`,
-        brokerPageNote: "Broker Page Only",
-        email: email,
-        phone: phone,
-        phoneClean: phone.replace(/\D/g, ""),
-        social: {
-            instagram: "#",
-            linkedin: "#",
-            zillow: "#",
-            website: "#"
-        },
-        hero: {
-            headline: `ELEVATED LIVING<br><span class='italic text-luxury-gold font-light'>IN ${city.toUpperCase()}</span>`,
-            backgroundImage: "https://images.unsplash.com/photo-1600596542815-2495db9dc2c3?q=80&w=2070&auto=format&fit=crop"
-        },
-        philosophy: {
-            headline: "Market expertise,<br><span class='italic text-luxury-charcoal/80'>unwavering</span><br>dedication.",
-            text: "Representing the finest properties. My philosophy blends data-driven market insight with the art of luxury service.",
-            stats: {
-                years: "10+",
-                yearsLabel: "Years Experience",
-                producer: "Top 1%",
-                producerLabel: "Producer",
-                availability: "24/7",
-                availabilityLabel: "Availability"
-            },
-            image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=2053&auto=format&fit=crop"
-        },
-        portfolio: {
-            active: {
-                title: "The Woodlands Estate",
-                price: "$2,850,000",
-                specs: "5 Bed | 5.5 Bath",
-                image: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=2071&auto=format&fit=crop",
-            },
-            sold: {
-                title: "Benders Landing",
-                status: "Sold Above Asking",
-                image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop"
-            }
-        },
-        services: [
-            { title: "Market Analysis", desc: "Deep analytical insight into real estate trends.", icon: "fa-chart-line" },
-            { title: "Luxury Staging", desc: "Curating environments that resonate.", icon: "fa-couch" },
-            { title: "Global Reach", desc: "Connecting with buyers from relocation hotspots.", icon: "fa-globe" }
-        ]
-    };
-
-    const configScript = `<script>const agentConfig = ${JSON.stringify(agentConfig, null, 4)};</script>`;
-    
-    // Replace standard placeholders
-    const simplePlaceholders = ['agent_name', 'brokerage', 'bio', 'city_area', 'phone', 'email'];
-    simplePlaceholders.forEach(key => {
-        const regex = new RegExp(`{{${key}}}`, 'g');
-        html = html.replace(regex, data[key] || '');
-    });
-
-    // Inject Config Script
-    return html.replace("{{AGENT_CONFIG_SCRIPT}}", configScript);
-  };
-
   const handleGenerate = async () => {
     if (!selectedTemplate) return;
 
     setIsGenerating(true);
     try {
-      // 1. Get Template Content
-      let templateHtml = '';
-      
-      if (selectedTemplate === 'kontako') {
-          templateHtml = KONTAKO_TEMPLATE;
-      } else {
-          const customTemplate = customTemplates.find((t: any) => t.id === selectedTemplate);
-          if (customTemplate && customTemplate.html_content) {
-              templateHtml = customTemplate.html_content;
-          } else {
-              if (!templateHtml) {
-                 // Fallback for "hardcoded" types if they are not in the local/db list
-                 templateHtml = `<html><body><h1>Website for ${lead.business_name}</h1><p>Template: ${selectedTemplate}</p></body></html>`;
-              }
-          }
-      }
-
-      // 2. Prepare Data
-      const agentData = {
-          // Standard fields
-          business_name: lead.business_name || 'My Business',
-          agent_name: lead.business_name || 'Agent',
-          brokerage: 'Royal Automate Brokerage',
-          email: lead.email || 'contact@example.com',
-          phone: lead.phone || '',
-          city_area: 'The Woodlands',
-          
-          // New Template Fields (Handlebars)
-          site_title: lead.business_name || 'Future Living',
-          tagline: 'Future Living',
-          meta_description: `Exclusive properties represented by ${lead.business_name}.`,
-          accent_color: '#ff4d1c', // Default orange accent
-          brand_name: lead.business_name || 'KONTAKO',
-          hero_image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop',
-          hero_headline: 'The Future <br> of Home Living',
-          hero_subtext: 'Trust us with your dreams! We are ready to help you build the dream property that will be your future sanctuary.',
-          contact_email: lead.email || 'hello@example.com',
-          contact_phone: lead.phone || '+1 (555) 000-0000',
-          
-          // Project Loop Data
-          projects: [
-             { 
-               grid_class: "md:col-span-3", 
-               image: "https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&q=80&w=800", 
-               number: "01", 
-               title: "Pedro Residence" 
-             },
-             { 
-               grid_class: "md:col-span-4", 
-               image: "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&q=80&w=800", 
-               number: "02", 
-               title: "Sunset Plaza" 
-             },
-             { 
-               grid_class: "md:col-span-5", 
-               image: "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?auto=format&fit=crop&q=80&w=800", 
-               number: "03", 
-               title: "Cliffwood Ave" 
-             }
-          ]
-      };
-
-      // 3. Generate HTML Locally
-      const generatedHtmlContent = generateLocalHtml(templateHtml, agentData);
-      
-      setGeneratedHtml(generatedHtmlContent);
-      setOriginalHtml(generatedHtmlContent);
-
-      // 4. Deploy to Netlify (Client-Side)
-      const NETLIFY_ACCESS_TOKEN = "nfp_TUCzPndK2v6FhWZ9QQ8EdnEKB1s3rPp89e5d"; 
-      const siteName = `royal-site-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-
-      // Create Site
-      const createSiteRes = await fetch("https://api.netlify.com/api/v1/sites", {
-          method: "POST",
-          headers: {
-              "Authorization": `Bearer ${NETLIFY_ACCESS_TOKEN}`,
-              "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ name: siteName })
+      const { data, error } = await supabase.functions.invoke('generate-website', {
+        body: {
+          businessName: lead.business_name,
+          industry: lead.industry,
+          templateId: selectedTemplate,
+          email: lead.email,
+          phone: lead.phone,
+          website: lead.website,
+          leadId: lead.id,
+        },
       });
 
-      if (!createSiteRes.ok) throw new Error(`Netlify Create Failed: ${await createSiteRes.text()}`);
-      const siteData = await createSiteRes.json();
-      const siteId = siteData.site_id;
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Failed to generate website');
 
-      // Deploy (Digest Method)
-      const encoder = new TextEncoder();
-      const data = encoder.encode(generatedHtmlContent);
-      const hashBuffer = await crypto.subtle.digest('SHA-1', data);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const sha1 = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-      const deployRes = await fetch(`https://api.netlify.com/api/v1/sites/${siteId}/deploys`, {
-          method: "POST",
-          headers: {
-              "Authorization": `Bearer ${NETLIFY_ACCESS_TOKEN}`,
-              "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ files: { "/index.html": sha1 } })
-      });
-
-      if (!deployRes.ok) throw new Error(`Netlify Deploy Start Failed: ${await deployRes.text()}`);
-      const deployData = await deployRes.json();
-      const deployId = deployData.id;
-
-      // Upload File
-      const uploadRes = await fetch(`https://api.netlify.com/api/v1/deploys/${deployId}/files/index.html`, {
-          method: "PUT",
-          headers: {
-              "Authorization": `Bearer ${NETLIFY_ACCESS_TOKEN}`,
-              "Content-Type": "application/octet-stream"
-          },
-          body: generatedHtmlContent
-      });
-
-      if (!uploadRes.ok) throw new Error(`Netlify Upload Failed: ${await uploadRes.text()}`);
-
-      const netlifyUrl = siteData.ssl_url || siteData.url;
-      setPublicUrl(netlifyUrl);
-      setPublicId('netlify-' + siteId);
+      const generatedPublicUrl = `${window.location.origin}/site/${data.publicId}`;
       
+      setGeneratedHtml(data.html);
+      setOriginalHtml(data.html);
+      setPublicUrl(generatedPublicUrl);
+      setPublicId(data.publicId);
       setShowPreview(true);
       setEditHistory([]);
-      toast.success('Website generated and deployed to Netlify!');
-      onGenerate?.(selectedTemplate, generatedHtmlContent, netlifyUrl);
-
+      toast.success('Website generated and hosted successfully!');
+      onGenerate?.(selectedTemplate, data.html, generatedPublicUrl);
     } catch (error: any) {
       console.error('Error generating website:', error);
-      toast.error(error.message || 'Failed to generate website');
+      if (error.message?.includes('429') || error.message?.includes('Rate limit')) {
+        toast.error('Rate limit exceeded. Please try again in a moment.');
+      } else if (error.message?.includes('402')) {
+        toast.error('AI usage limit reached. Please add credits to continue.');
+      } else {
+        toast.error(error.message || 'Failed to generate website');
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -892,14 +626,8 @@ export function WebsiteTemplateModal({
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="flex justify-end">
-                <Button variant="outline" size="sm" onClick={() => navigate('/templates')}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Upload / Manage Templates
-                </Button>
-            </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {allTemplates.map((template) => {
+              {WEBSITE_TEMPLATES.map((template) => {
                 const Icon = template.icon;
                 const isSelected = selectedTemplate === template.id;
 

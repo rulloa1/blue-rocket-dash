@@ -78,8 +78,15 @@ export function EmailPreviewDialog({
           <div className="p-6 bg-[#0f0f0f]">
             {/* Email content preview - styled to match the actual email */}
             <div className="max-w-[520px] mx-auto">
-              {/* Logo Removed by User Request */}
-              
+              {/* Logo */}
+              <div className="text-center mb-6">
+                <img 
+                  src={logoUrl} 
+                  alt="RoysCompany.com" 
+                  className="w-64 max-w-full h-auto mx-auto" 
+                />
+              </div>
+
               {/* Main Card */}
               <div className="bg-[#1a1a1a] rounded-2xl border border-[#2a2a2a] overflow-hidden">
                 {/* Gold accent bar */}

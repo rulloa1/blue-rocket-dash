@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Search, Globe } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,16 +11,15 @@ import { AddLeadModal } from '@/components/leads/AddLeadModal';
 import { LeadDrawer } from '@/components/leads/LeadDrawer';
 import { BulkActionsBar } from '@/components/leads/BulkActionsBar';
 import { useLeads, LeadFilters } from '@/hooks/useLeads';
-import { ScrapeLeadsModal } from '@/components/leads/ScrapeLeadsModal';
 
 export default function Leads() {
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showScrapeModal, setShowScrapeModal] = useState(false);
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [filters, setFilters] = useState<LeadFilters>({
     search: '',
     status: 'all',
+    source: 'all',
     industry: '',
     dateRange: { from: null, to: null },
   });
@@ -56,10 +55,6 @@ export default function Leads() {
               <Plus className="h-4 w-4" />
               Add Lead
             </Button>
-            <Button onClick={() => setShowScrapeModal(true)} variant="outline" className="gap-2">
-              <Globe className="h-4 w-4" />
-              Scrape Leads
-            </Button>
           </div>
         </div>
 
@@ -91,7 +86,6 @@ export default function Leads() {
 
         {/* Add Lead Modal */}
         <AddLeadModal open={showAddModal} onOpenChange={setShowAddModal} />
-        <ScrapeLeadsModal open={showScrapeModal} onOpenChange={setShowScrapeModal} />
 
         {/* Lead Detail Drawer */}
         <LeadDrawer

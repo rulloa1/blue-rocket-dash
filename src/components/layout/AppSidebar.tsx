@@ -6,7 +6,6 @@ import {
   GitBranch,
   FileText,
   Settings,
-  LayoutTemplate,
   Zap,
 } from 'lucide-react';
 import {
@@ -29,7 +28,6 @@ const navItems = [
   { title: 'Outreach', url: '/outreach', icon: Send },
   { title: 'Pipeline', url: '/pipeline', icon: GitBranch },
   { title: 'Proposals', url: '/proposals', icon: FileText },
-  { title: 'Templates', url: '/templates', icon: LayoutTemplate },
   { title: 'Settings', url: '/settings', icon: Settings },
 ];
 
@@ -42,7 +40,9 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r border-border">
       <SidebarHeader className="border-b border-border px-4 py-4">
         <Link to="/" className="flex items-center gap-3">
-          {/* Logo removed by user request */}
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+            <Zap className="h-4 w-4 text-primary-foreground" />
+          </div>
           {!isCollapsed && (
             <span className="text-lg font-semibold text-foreground">
               RoysCompany

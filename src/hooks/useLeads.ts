@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,10 +11,12 @@ type LeadNote = Database['public']['Tables']['lead_notes']['Row'];
 type LeadActivity = Database['public']['Tables']['lead_activities']['Row'];
 
 export type LeadStatus = 'new' | 'contacted' | 'qualified' | 'not_interested';
+export type LeadSource = 'manual' | 'webhook' | 'import' | 'website';
 
 export interface LeadFilters {
   search: string;
   status: LeadStatus | 'all';
+  source?: LeadSource | 'all';
   industry: string;
   dateRange: { from: Date | null; to: Date | null };
 }
@@ -33,6 +34,10 @@ export function useLeads(filters: LeadFilters) {
 
       if (filters.status !== 'all') {
         query = query.eq('status', filters.status);
+      }
+
+      if (filters.source && filters.source !== 'all') {
+        query = query.eq('source', filters.source);
       }
 
       if (filters.industry) {
@@ -60,31 +65,6 @@ export function useLeads(filters: LeadFilters) {
     },
     enabled: !!user,
   });
-
-  // Real-time Subscription
-  const queryClient = useQueryClient();
-  useEffect(() => {
-    if (!user) return;
-
-    const channel = supabase
-      .channel('schema-db-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'leads',
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['leads'] });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, queryClient]);
 }
 
 export function useLead(id: string | null) {
