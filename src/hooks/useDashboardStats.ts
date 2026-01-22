@@ -41,6 +41,10 @@ export function useDashboardStats() {
         supabase.from('deals').select('stage'),
       ]);
 
+      if (leadsResult.error) console.error('Error fetching leads:', leadsResult.error);
+      if (proposalsResult.error) console.error('Error fetching proposals:', proposalsResult.error);
+      if (dealsResult.error) console.error('Error fetching deals:', dealsResult.error);
+
       // Count deals by stage
       const stageCounts: Record<string, number> = {};
       (dealsResult.data || []).forEach((deal) => {
