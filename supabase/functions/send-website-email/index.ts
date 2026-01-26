@@ -50,8 +50,8 @@ serve(async (req) => {
     // Create activate URL with business name for post-payment redirect
     const activateUrl = `${ACTIVATE_BASE_URL}?business=${encodeURIComponent(businessName)}`;
 
-    // Logo URL hosted on the published domain
-    const logoUrl = 'https://royscompany.lovable.app/images/royscompany-logo.jpeg';
+    // Logo URL hosted on the published domain (PNG version)
+    const logoUrl = 'https://royscompany.lovable.app/images/royscompany-logo.png';
 
     const emailHtml = `
 <!DOCTYPE html>
