@@ -203,7 +203,7 @@ serve(async (req) => {
   }
 
   try {
-    const { businessName, industry, templateId, email, phone, website, leadId } = await req.json();
+    const { businessName, industry, templateId, email, phone, website, leadId, customColor, tone } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -226,7 +226,8 @@ serve(async (req) => {
       throw new Error("Invalid authentication token");
     }
 
-    const template = { ...TEMPLATE_STYLES[templateId as keyof typeof TEMPLATE_STYLES] } || { ...TEMPLATE_STYLES.modern };
+    const templateConfig = TEMPLATE_STYLES[templateId as keyof typeof TEMPLATE_STYLES];
+    const template = templateConfig ? { ...templateConfig } : { ...TEMPLATE_STYLES.modern };
     
     // Override primary color if provided
     if (customColor) {

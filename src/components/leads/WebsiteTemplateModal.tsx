@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Palette, Sparkles, Layers, Zap, Loader2, Check, ExternalLink, Download, Copy, Link, Leaf, Cpu, Wand2, Send, RotateCcw, Mail, Pencil, X, Eye } from 'lucide-react';
+import { Palette, Sparkles, Layers, Zap, Loader2, Check, ExternalLink, Download, Copy, Link, Leaf, Cpu, Wand2, Send, RotateCcw, Mail, Pencil, X, Eye, Monitor, Smartphone } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -128,6 +128,10 @@ export function WebsiteTemplateModal({
   const [emailInput, setEmailInput] = useState('');
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
   const updateLead = useUpdateLead();
+  
+  // Custom website options
+  const [customColor, setCustomColor] = useState('#3B82F6');
+  const [tone, setTone] = useState('Professional');
   
   // Track lead email locally for immediate UI updates
   const [localLeadEmail, setLocalLeadEmail] = useState(lead.email);
