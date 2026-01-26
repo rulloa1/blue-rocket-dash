@@ -14,6 +14,7 @@ import Settings from "./pages/Settings";
 import PublicWebsite from "./pages/PublicWebsite";
 import ActivateWebsite from "./pages/ActivateWebsite";
 import NotFound from "./pages/NotFound";
+import { DeepgramVoiceAgent } from "@/components/DeepgramVoiceAgent";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <DeepgramVoiceAgent />
       <BrowserRouter>
         <AuthProvider>
           <Routes>
