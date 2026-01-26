@@ -40,6 +40,7 @@ import {
   useUpdateWebhook,
   useDeleteWebhook,
   useTestWebhook,
+  useSyncAirtable,
 } from '@/hooks/useSettings';
 import { toast } from 'sonner';
 
@@ -60,6 +61,7 @@ export function IntegrationsTab() {
   const updateWebhook = useUpdateWebhook();
   const deleteWebhook = useDeleteWebhook();
   const testWebhook = useTestWebhook();
+  const syncAirtable = useSyncAirtable();
 
   const [showAddWebhook, setShowAddWebhook] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
