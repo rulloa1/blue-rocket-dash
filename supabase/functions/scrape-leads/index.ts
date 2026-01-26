@@ -119,9 +119,9 @@ serve(async (req)=>{
       },
       status: 200
     });
-  } catch (error) {
+  } catch (error: unknown) {
     return new Response(JSON.stringify({
-      error: error.message
+      error: error instanceof Error ? error.message : 'An unknown error occurred'
     }), {
       headers: {
         ...corsHeaders,
