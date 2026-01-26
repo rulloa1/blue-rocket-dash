@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Mail, Send, Server, Lock, User } from 'lucide-react';
+import { Mail, Send, Server, Lock, User, Shield, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 import { useSettings, useUpdateSettings } from '@/hooks/useSettings';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export function EmailTab() {
@@ -22,32 +24,81 @@ export function EmailTab() {
     email_signature: '',
   });
 
+  const [isSaving, setIsSaving] = useState(false);
+  const [passwordChanged, setPasswordChanged] = useState(false);
+
   useEffect(() => {
     if (settings) {
       setFormData({
         smtp_host: settings.smtp_host || '',
         smtp_port: settings.smtp_port?.toString() || '',
         smtp_username: settings.smtp_username || '',
-        smtp_password: settings.smtp_password || '',
+        // Show placeholder for encrypted password, actual password never sent to client
+        smtp_password: settings.smtp_password ? '••••••••' : '',
         smtp_from_email: settings.smtp_from_email || '',
         email_signature: settings.email_signature || '',
       });
+      setPasswordChanged(false);
     }
   }, [settings]);
 
-  const handleSave = () => {
-    updateSettings.mutate({
-      smtp_host: formData.smtp_host || null,
-      smtp_port: formData.smtp_port ? parseInt(formData.smtp_port) : null,
-      smtp_username: formData.smtp_username || null,
-      smtp_password: formData.smtp_password || null,
-      smtp_from_email: formData.smtp_from_email || null,
-      email_signature: formData.email_signature || null,
-    });
+  const handlePasswordChange = (value: string) => {
+    setFormData({ ...formData, smtp_password: value });
+    // Only mark as changed if user actually types something new
+    if (value !== '••••••••') {
+      setPasswordChanged(true);
+    }
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      let encryptedPassword: string | null = null;
+
+      // Only encrypt if password was actually changed
+      if (passwordChanged && formData.smtp_password && formData.smtp_password !== '••••••••') {
+        // Encrypt the password before saving
+        const { data, error } = await supabase.functions.invoke('encrypt-smtp-password', {
+          body: {
+            action: 'encrypt',
+            password: formData.smtp_password,
+          },
+        });
+
+        if (error) {
+          console.error('Encryption error:', error);
+          toast.error('Failed to encrypt password securely');
+          return;
+        }
+
+        encryptedPassword = data.encrypted;
+      }
+
+      // Build update object
+      const updateData: Record<string, string | number | null> = {
+        smtp_host: formData.smtp_host || null,
+        smtp_port: formData.smtp_port ? parseInt(formData.smtp_port) : null,
+        smtp_username: formData.smtp_username || null,
+        smtp_from_email: formData.smtp_from_email || null,
+        email_signature: formData.email_signature || null,
+      };
+
+      // Only update password if it was changed
+      if (passwordChanged) {
+        updateData.smtp_password = encryptedPassword;
+      }
+
+      await updateSettings.mutateAsync(updateData);
+      setPasswordChanged(false);
+    } catch (error) {
+      console.error('Save error:', error);
+      toast.error('Failed to save settings');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleTestEmail = () => {
-    // This would send a test email via an edge function
     toast.info('Test email functionality coming soon');
   };
 
@@ -60,13 +111,24 @@ export function EmailTab() {
     );
   }
 
+  const hasEncryptedPassword = settings?.smtp_password?.startsWith('enc:');
+
   return (
     <div className="space-y-8">
       {/* SMTP Configuration */}
       <div>
-        <h3 className="text-lg font-medium mb-2">SMTP Configuration</h3>
+        <div className="flex items-center gap-2 mb-2">
+          <h3 className="text-lg font-medium">SMTP Configuration</h3>
+          {hasEncryptedPassword && (
+            <Badge variant="secondary" className="gap-1">
+              <Shield className="h-3 w-3" />
+              Encrypted
+            </Badge>
+          )}
+        </div>
         <p className="text-sm text-muted-foreground mb-4">
-          Configure your email server for sending proposals and notifications
+          Configure your email server for sending proposals and notifications.
+          Passwords are encrypted with AES-256-GCM before storage.
         </p>
 
         <div className="grid gap-4 md:grid-cols-2">
@@ -111,13 +173,23 @@ export function EmailTab() {
             <Label htmlFor="smtp_password">
               <Lock className="inline h-4 w-4 mr-2" />
               Password
+              {passwordChanged && (
+                <span className="ml-2 text-xs text-muted-foreground">(will be encrypted)</span>
+              )}
             </Label>
             <Input
               id="smtp_password"
               type="password"
               value={formData.smtp_password}
-              onChange={(e) => setFormData({ ...formData, smtp_password: e.target.value })}
+              onChange={(e) => handlePasswordChange(e.target.value)}
               placeholder="••••••••"
+              onFocus={(e) => {
+                // Clear placeholder when focusing if it's the default
+                if (e.target.value === '••••••••') {
+                  setFormData({ ...formData, smtp_password: '' });
+                  setPasswordChanged(true);
+                }
+              }}
             />
           </div>
 
@@ -137,8 +209,15 @@ export function EmailTab() {
         </div>
 
         <div className="flex gap-2 mt-4">
-          <Button onClick={handleSave} disabled={updateSettings.isPending}>
-            Save Settings
+          <Button onClick={handleSave} disabled={isSaving || updateSettings.isPending}>
+            {isSaving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Encrypting & Saving...
+              </>
+            ) : (
+              'Save Settings'
+            )}
           </Button>
           <Button variant="outline" onClick={handleTestEmail}>
             <Send className="mr-2 h-4 w-4" />
@@ -168,8 +247,15 @@ contact@royscompany.com`}
             rows={6}
           />
 
-          <Button onClick={handleSave} disabled={updateSettings.isPending}>
-            Save Signature
+          <Button onClick={handleSave} disabled={isSaving || updateSettings.isPending}>
+            {isSaving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              'Save Signature'
+            )}
           </Button>
         </div>
       </div>
