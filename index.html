@@ -32,10 +32,13 @@
     <div id="root"></div>
     <script>
       (function(){
-        var redirect = sessionStorage.redirect;
-        delete sessionStorage.redirect;
-        if (redirect && redirect != location.href) {
-          history.replaceState(null, null, redirect);
+        const url = new URL(window.location.href);
+        const path = url.searchParams.get('p');
+        if (path) {
+          const search = url.searchParams.get('q');
+          const hash = url.hash;
+          const newUrl = url.pathname + path + (search ? '?' + search : '') + hash;
+          history.replaceState(null, null, newUrl);
         }
       })();
     </script>

@@ -1,18 +1,18 @@
-<!doctype html>
-<html lang="en" class="dark">
+<!DOCTYPE html>
+<html>
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>VoiceBotStudio - AI Automation Agency</title>
+    <meta charset="utf-8">
+    <title>Redirecting...</title>
     <script>
-      // Store the URL that led to the 404 page
-      sessionStorage.redirect = location.href;
+      const l = window.location;
+      const path = l.pathname.split('/').slice(0, -1).join('/') + '/';
+      const search = l.search;
+      const hash = l.hash;
+      const newUrl = path + '?' + 'p=' + l.pathname.slice(1) + (search ? '&q=' + search.slice(1) : '') + hash;
+      l.replace(newUrl);
     </script>
-    <meta http-equiv="refresh" content="0;URL='/blue-rocket-dash/'"></meta>
   </head>
-
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <p>If you are not redirected automatically, follow this <a href="https://rulloa1.github.io/blue-rocket-dash">link to the homepage</a>.</p>
   </body>
 </html>
