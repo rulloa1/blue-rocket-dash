@@ -98,8 +98,36 @@ export function EmailTab() {
     }
   };
 
-  const handleTestEmail = () => {
-    toast.info('Test email functionality coming soon');
+  const [isSendingTest, setIsSendingTest] = useState(false);
+  const [testEmail, setTestEmail] = useState('');
+
+  const handleTestEmail = async () => {
+    const recipient = testEmail || formData.smtp_from_email || formData.smtp_username;
+    if (!recipient) {
+      toast.error('Please enter a recipient email or configure your From Email first');
+      return;
+    }
+    if (!formData.smtp_host || !formData.smtp_username) {
+      toast.error('Please save your SMTP settings first');
+      return;
+    }
+
+    setIsSendingTest(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-test-email', {
+        body: { recipientEmail: recipient },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast.success(`Test email sent to ${recipient}`);
+    } catch (error: any) {
+      console.error('Test email error:', error);
+      toast.error(error.message || 'Failed to send test email');
+    } finally {
+      setIsSendingTest(false);
+    }
   };
 
   if (isLoading) {
@@ -208,8 +236,8 @@ export function EmailTab() {
           </div>
         </div>
 
-        <div className="flex gap-2 mt-4">
-          <Button onClick={handleSave} disabled={isSaving || updateSettings.isPending}>
+        <div className="flex flex-col gap-3 mt-4">
+          <Button onClick={handleSave} disabled={isSaving || updateSettings.isPending} className="w-fit">
             {isSaving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -219,10 +247,31 @@ export function EmailTab() {
               'Save Settings'
             )}
           </Button>
-          <Button variant="outline" onClick={handleTestEmail}>
-            <Send className="mr-2 h-4 w-4" />
-            Send Test Email
-          </Button>
+
+          <Separator />
+
+          <div>
+            <Label htmlFor="test_email" className="text-sm font-medium mb-1.5 block">Send Test Email</Label>
+            <p className="text-xs text-muted-foreground mb-2">Verify your SMTP configuration by sending a test email</p>
+            <div className="flex gap-2">
+              <Input
+                id="test_email"
+                type="email"
+                value={testEmail}
+                onChange={(e) => setTestEmail(e.target.value)}
+                placeholder={formData.smtp_from_email || formData.smtp_username || 'recipient@example.com'}
+                className="max-w-xs"
+              />
+              <Button variant="outline" onClick={handleTestEmail} disabled={isSendingTest}>
+                {isSendingTest ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="mr-2 h-4 w-4" />
+                )}
+                {isSendingTest ? 'Sending...' : 'Send Test'}
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
