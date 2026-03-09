@@ -331,7 +331,7 @@ serve(async (req) => {
     });
 
     const resendText = await resendResponse.text();
-    let resendJson: any = null;
+    let resendJson: Record<string, string> | null = null;
     try { resendJson = JSON.parse(resendText); } catch { /* ignore */ }
 
     if (!resendResponse.ok) {

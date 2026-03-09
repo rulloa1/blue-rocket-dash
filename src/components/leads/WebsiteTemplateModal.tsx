@@ -221,14 +221,15 @@ export function WebsiteTemplateModal({
       setEditHistory([]);
       toast.success('Website generated and hosted successfully!');
       onGenerate?.(selectedTemplate, data.html, generatedPublicUrl);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error generating website:', error);
-      if (error.message?.includes('429') || error.message?.includes('Rate limit')) {
+      const message = error instanceof Error ? error.message : 'Failed to generate website';
+      if (message.includes('429') || message.includes('Rate limit')) {
         toast.error('Rate limit exceeded. Please try again in a moment.');
-      } else if (error.message?.includes('402')) {
+      } else if (message.includes('402')) {
         toast.error('AI usage limit reached. Please add credits to continue.');
       } else {
-        toast.error(error.message || 'Failed to generate website');
+        toast.error(message);
       }
     } finally {
       setIsGenerating(false);
@@ -255,14 +256,15 @@ export function WebsiteTemplateModal({
       setGeneratedHtml(data.html);
       setEditRequest('');
       toast.success('Website updated successfully!');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error editing website:', error);
-      if (error.message?.includes('429') || error.message?.includes('Rate limit')) {
+      const message = error instanceof Error ? error.message : 'Failed to edit website';
+      if (message.includes('429') || message.includes('Rate limit')) {
         toast.error('Rate limit exceeded. Please try again in a moment.');
-      } else if (error.message?.includes('402')) {
+      } else if (message.includes('402')) {
         toast.error('AI usage limit reached. Please add credits to continue.');
       } else {
-        toast.error(error.message || 'Failed to edit website');
+        toast.error(message);
       }
     } finally {
       setIsEditing(false);
@@ -325,7 +327,7 @@ export function WebsiteTemplateModal({
       });
 
       if (error) {
-        let body: any = null;
+        let body: Record<string, string> | null = null;
         if (response) {
           try {
             body = await response.clone().json();
@@ -351,12 +353,13 @@ export function WebsiteTemplateModal({
       if (!data?.success) throw new Error(data?.error || 'Failed to send email');
 
       toast.success(`Email sent to ${localLeadEmail}!`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error sending email:', error);
-      if (error.message?.includes('RESEND_API_KEY')) {
+      const message = error instanceof Error ? error.message : 'Failed to send email';
+      if (message.includes('RESEND_API_KEY')) {
         toast.error('Email service not configured. Please add RESEND_API_KEY in settings.');
       } else {
-        toast.error(error.message || 'Failed to send email');
+        toast.error(message);
       }
     } finally {
       setIsSendingEmail(false);

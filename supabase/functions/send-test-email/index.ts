@@ -105,10 +105,10 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Send test email error:', error)
     return new Response(
-      JSON.stringify({ error: error.message || 'Failed to send test email' }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Failed to send test email' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }

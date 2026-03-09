@@ -252,7 +252,7 @@ export function SequenceDetail({ sequence, onBack }: SequenceDetailProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {enrollments.map((enrollment: any) => (
+                {enrollments.map((enrollment: { id: string; leads: { business_name: string; email: string | null } | null; current_step: number; status: string; enrolled_at: string }) => (
                   <TableRow key={enrollment.id}>
                     <TableCell className="font-medium">
                       {enrollment.leads?.business_name || 'Unknown'}
