@@ -98,8 +98,36 @@ export function EmailTab() {
     }
   };
 
-  const handleTestEmail = () => {
-    toast.info('Test email functionality coming soon');
+  const [isSendingTest, setIsSendingTest] = useState(false);
+  const [testEmail, setTestEmail] = useState('');
+
+  const handleTestEmail = async () => {
+    const recipient = testEmail || formData.smtp_from_email || formData.smtp_username;
+    if (!recipient) {
+      toast.error('Please enter a recipient email or configure your From Email first');
+      return;
+    }
+    if (!formData.smtp_host || !formData.smtp_username) {
+      toast.error('Please save your SMTP settings first');
+      return;
+    }
+
+    setIsSendingTest(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-test-email', {
+        body: { recipientEmail: recipient },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast.success(`Test email sent to ${recipient}`);
+    } catch (error: any) {
+      console.error('Test email error:', error);
+      toast.error(error.message || 'Failed to send test email');
+    } finally {
+      setIsSendingTest(false);
+    }
   };
 
   if (isLoading) {
