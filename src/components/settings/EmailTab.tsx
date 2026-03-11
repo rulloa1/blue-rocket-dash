@@ -122,9 +122,9 @@ export function EmailTab() {
       if (data?.error) throw new Error(data.error);
 
       toast.success(`Test email sent to ${recipient}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Test email error:', error);
-      toast.error(error.message || 'Failed to send test email');
+      toast.error(error instanceof Error ? error.message : 'Failed to send test email');
     } finally {
       setIsSendingTest(false);
     }

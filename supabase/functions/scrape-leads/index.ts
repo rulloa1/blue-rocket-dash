@@ -57,7 +57,7 @@ serve(async (req)=>{
     }
 
     // 2. Map Firecrawl results to our Lead schema
-    const leadsToInsert = searchResult.data.map((item: any) => {
+    const leadsToInsert = searchResult.data.map((item: { title?: string; url?: string; description?: string }) => {
         // Basic search returns: title, url, description, etc.
         return {
             business_name: item.title || "Unknown Agent",

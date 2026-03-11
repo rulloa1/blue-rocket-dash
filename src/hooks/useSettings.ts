@@ -69,14 +69,14 @@ export function useSettings() {
     queryKey: ['user-settings', user?.id],
     queryFn: async () => {
       // Try to get existing settings
-      let { data, error } = await supabase
+      const { data: existingData, error } = await supabase
         .from('user_settings')
         .select('*')
         .eq('user_id', user!.id)
         .maybeSingle();
 
       // If no settings exist, create them
-      if (!data && !error) {
+      if (!existingData && !error) {
         const { data: newSettings, error: createError } = await supabase
           .from('user_settings')
           .insert({ user_id: user!.id })
@@ -84,11 +84,11 @@ export function useSettings() {
           .single();
 
         if (createError) throw createError;
-        data = newSettings;
+        return newSettings as UserSettings;
       }
 
       if (error) throw error;
-      return data as UserSettings;
+      return existingData as UserSettings;
     },
     enabled: !!user,
   });

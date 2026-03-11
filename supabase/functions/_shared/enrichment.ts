@@ -67,7 +67,7 @@ export class EnrichmentService {
     }
   }
 
-  private parseScrapedData(scrapedResult: any): EnrichedData {
+  private parseScrapedData(scrapedResult: Record<string, unknown>): EnrichedData {
     // Firecrawl v1 'extract' format returns data in scrapedResult.data.extract
     const extracted = scrapedResult.data?.extract;
     const metadata = scrapedResult.data?.metadata;

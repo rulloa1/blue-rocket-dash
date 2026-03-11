@@ -32,7 +32,7 @@ export function useRecentActivities(limit = 10) {
 
       if (error) throw error;
 
-      return (data || []).map((activity: any) => ({
+      return (data || []).map((activity: { id: string; action: string; description: string | null; created_at: string; lead_id: string; leads: { business_name: string } | null }) => ({
         id: activity.id,
         action: activity.action,
         description: activity.description,
