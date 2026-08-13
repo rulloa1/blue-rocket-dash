@@ -183,7 +183,8 @@ export default function PublicWebsite() {
         srcDoc={finalHtml}
         className={`w-full h-full border-0 ${!isActivated ? 'pt-11' : ''}`}
         title="Website"
-        sandbox="allow-scripts allow-same-origin"
+        sandbox="allow-scripts"
+        referrerPolicy="no-referrer"
         style={{ height: !isActivated ? 'calc(100vh - 44px)' : '100vh' }}
       />
     </div>
